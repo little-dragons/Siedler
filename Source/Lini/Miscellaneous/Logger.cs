@@ -10,22 +10,31 @@ public static class Logger
         GLCallback, 
         GLFWCallback, 
         RenderThread,
-        Control,
+        MainThread,
         GLFW,
         GL
     }
 
     public static void Info(string message, Source? source = null)
     {
-        Console.WriteLine($"Info{(source is null ? "" : $"[{source}]")}: " + message);
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write($"Info{(source is null ? "" : $"[{source}]")}");
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.WriteLine(": " + message);
     }
     public static void Warn(string message, Source? source = null)
     {
-        Console.WriteLine($"WARN{(source is null ? "" : $"[{source}]")}: " + message);
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.Write($"WARN{(source is null ? "" : $"[{source}]")}");
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.WriteLine(": " + message);
     }
     public static void Error(string message, Source? source = null)
     {
-        Console.WriteLine($"ERROR{(source is null ? "" : $"[{source}]")}: " + message);
+        Console.ForegroundColor = ConsoleColor.DarkRed;
+        Console.Write($"ERROR{(source is null ? "" : $"[{source}]")}");
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.WriteLine(": " + message);
     }
     
     public static void Write(Level level, string msg, Source? source = null)

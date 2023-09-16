@@ -5,17 +5,23 @@ namespace Lini.Rendering;
 
 internal static class RenderThread
 {
-    private static readonly ConcurrentQueue<Action> WorkItems = new();
-    private static Thread ThreadHandle = new(RenderThreadLoop);
+    private static ConcurrentQueue<Action> WorkItems = null!;
+    private static Thread ThreadHandle = null!;
 
-    private static volatile bool ThreadToTerminate = false;
-    private static readonly object ThreadToTerminateLock = new();
+    private static volatile bool ThreadToTerminate;
+    private static object ThreadToTerminateLock = null!;
 
-    private static readonly AutoResetEvent StartThreadEvent = new(false);
-    private static readonly ManualResetEventSlim WorkDoneEvent = new(false);
+    private static AutoResetEvent StartThreadEvent = null!;
+    private static ManualResetEventSlim WorkDoneEvent = null!;
 
     internal static void Initialize()
     {
+        ThreadToTerminate = false;
+        StartThreadEvent = new(false);
+        WorkDoneEvent = new(false);
+        ThreadToTerminateLock = new();
+        WorkItems = new();
+
         ThreadHandle = new(RenderThreadLoop)
         {
             Name = "RenderThread"

@@ -12,8 +12,8 @@ public class Mesh
     public uint[] Indices { get; private set; }
     public Span<uint> IndicesSpan => new(Indices);
 
-    internal uint VertexBuffer { get; private set; }
-    internal uint IndexBuffer { get; private set; }
+    internal Buffer<Vertex> VertexBuffer { get; private set; } = default!;
+    internal Buffer<uint> IndexBuffer { get; private set; } = default!;
     internal uint VertexArray { get; private set; }
 
 
@@ -22,20 +22,19 @@ public class Mesh
         Indices = indices;
         Vertices = vertices;
 
-        RenderThread.Do(Create);
+        RenderThread.Do(InitGL);
     }
 
-    private void Create()
+    private void InitGL()
     {
         VertexArray = GL.GenVertexArray();
         GL.BindVertexArray(VertexArray);
 
-        VertexBuffer = GL.GenBuffer();
-        IndexBuffer = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.Array, VertexBuffer);
-        GL.BindBuffer(BufferTarget.ElementArray, IndexBuffer);
-        GL.BufferData<Vertex>(BufferTarget.Array, VerticesSpan, BufferUsage.StaticDraw);
-        GL.BufferData<uint>(BufferTarget.ElementArray, IndicesSpan, BufferUsage.StaticDraw);
+
+        VertexBuffer = new(BufferTarget.Array, BufferUsage.StaticDraw);
+        IndexBuffer = new(BufferTarget.ElementArray, BufferUsage.StaticDraw);
+        VertexBuffer.Write(VerticesSpan);
+        IndexBuffer.Write(IndicesSpan);
         Vertex.SetVertexArrayAttributes();
     }
 

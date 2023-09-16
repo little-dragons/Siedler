@@ -9,6 +9,7 @@ public static class GLFW
     public readonly struct WindowRef
     {
         public readonly IntPtr Raw;
+        public static readonly WindowRef Null = new();
     }
     public readonly struct MonitorRef
     {

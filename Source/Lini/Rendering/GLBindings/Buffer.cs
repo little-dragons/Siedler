@@ -16,8 +16,9 @@ internal sealed class Buffer<T> where T : unmanaged
 
         protected override bool ReleaseHandle()
         {
-            RenderThread.Do(() => GL.DeleteBuffer((uint)handle));
+            var oldHandle = handle;
             handle = -1;
+            RenderThread.Do(() => GL.DeleteBuffer((uint)oldHandle));
             return true;
         }
     }

@@ -16,7 +16,7 @@ public static class Sam
         if (IsInitialized)
             return IsInitialized;
 
-        Logger.Info("Initializing...", Logger.Source.Control);
+        Logger.Info("Initializing Lini engine.", Logger.Source.MainThread);
 
         GLFW.GetVersion(out int major, out int minor, out int rev);
         Version glfwVersion = new(major, minor, rev);
@@ -75,41 +75,8 @@ public static class Sam
 
             GL.ClearColor(1.0f, 0.5f, 0.2f, 1.0f);
 
-            string vertexShaderSource =
-                """
-                #version 330
-
-                layout(location = 0) in vec3 coord;
-                void main() {
-                    gl_Position = vec4(coord, 1.0);
-                }
-                """;
-
-            string fragmentShaderSource =
-                """
-                #version 330
-
-                out vec4 color;
-                void main() {
-                    color = vec4(1.0);
-                }
-                """;
-
-
-            var prog = GL.CreateProgram();
-            var vertexShader = GL.CreateShader(ShaderType.Vertex);
-            var fragmentShader = GL.CreateShader(ShaderType.Fragment);
-            GL.ShaderSource(vertexShader, vertexShaderSource);
-            GL.ShaderSource(fragmentShader, fragmentShaderSource);
-
-            GL.CompileShader(vertexShader);
-            GL.CompileShader(fragmentShader);
-
-            GL.AttachShader(prog, vertexShader);
-            GL.AttachShader(prog, fragmentShader);
-
-            GL.LinkProgram(prog);
-            GL.UseProgram(prog);
+            SharedObjects.Initialize();
+            SharedObjects.Simple.Bind();
         });
 
         RenderThread.Finish();
@@ -123,14 +90,16 @@ public static class Sam
         if (!IsInitialized)
             return;
 
-        // GLFW terminatino requires that a context is only current on the main thread.
-        RenderThread.Do(() => GLFW.MakeContextCurrent(new GLFW.WindowRef()));
+        SharedObjects.Terminate();
+
+        // GLFW termination requires that a context is only current on the main thread.
+        RenderThread.Do(() => GLFW.MakeContextCurrent(GLFW.WindowRef.Null));
         RenderThread.FinishAndTerminate();
 
         GLFW.Terminate();
 
-        IsInitialized = true;
-        Logger.Info("Terminated.", Logger.Source.Control);
+        IsInitialized = false;
+        Logger.Info("Exiting Lini engine. Goodbye.", Logger.Source.MainThread);
     }
 
     public static void Run(Mesh mesh)
@@ -138,7 +107,7 @@ public static class Sam
         if (!IsInitialized)
             return;
 
-        Logger.Info("Running main loop...", Logger.Source.Control);
+        Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
         while (!GLFW.WindowShouldClose(WindowRef))
         {
@@ -151,5 +120,7 @@ public static class Sam
             GLFW.PollEvents();
             RenderThread.Do(() => GLFW.SwapBuffers(WindowRef));
         }
+
+        Logger.Info("Exiting main loop.", Logger.Source.MainThread);
     }
 }

@@ -1,6 +1,5 @@
 namespace Lini.Rendering.GLBindings;
 
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 internal enum EnableCap : uint
@@ -4799,7 +4798,8 @@ internal static class GL
 		return res;
 	}
 
-	internal static int GetShader(uint shader, ShaderParameterName pname) {
+	internal static int GetShader(uint shader, ShaderParameterName pname)
+	{
 		GetShaderivInstance(shader, pname, out int res);
 		return res;
 	}
@@ -4829,39 +4829,56 @@ internal static class GL
 		ClearInstance(mask);
 	}
 
-    internal static string GetString(StringName name)
-    {
+	internal static string GetString(StringName name)
+	{
 		var ptr = GetStringInstance(name);
 		return Marshal.PtrToStringAnsi(ptr)!;
-    }
+	}
 
-    internal static void DebugMessageCallback(DebugProc callback)
-    {
-        PrivateDebugProc wrapper = (src, t, id, sev, l, msg, up) => {
+	internal static void DebugMessageCallback(DebugProc callback)
+	{
+		PrivateDebugProc wrapper = (src, t, id, sev, l, msg, up) =>
+		{
 			callback(src, t, id, sev, Marshal.PtrToStringAnsi(msg, l)!);
 		};
 		DebugMessageCallbackInstance(wrapper, 0);
-    }
+	}
 
-    internal static void DebugMessageInsert(DebugSource source, DebugType type, uint id, DebugSeverity severity, string message)
-    {
+	internal static void DebugMessageInsert(DebugSource source, DebugType type, uint id, DebugSeverity severity, string message)
+	{
 		var ptr = Marshal.StringToCoTaskMemAnsi(message);
-        DebugMessageInsertInstance(source, type, id, severity, message.Length, ptr);
+		DebugMessageInsertInstance(source, type, id, severity, message.Length, ptr);
 		Marshal.FreeCoTaskMem(ptr);
-    }
+	}
 
-    internal static void Enable(EnableCap cap)
-    {
-        EnableInstance(cap);
-    }
+	internal static void Enable(EnableCap cap)
+	{
+		EnableInstance(cap);
+	}
 
-	internal static void DeleteBuffer(uint buffer) {
+	internal static void DeleteBuffer(uint buffer)
+	{
 		DeleteBuffersInstance(1, in buffer);
 	}
 
-    #endregion
+	internal static void DeleteShader(uint handle)
+	{
+		DeleteShaderInstance(handle);
+	}
 
-    private delegate void PrivateDebugProc(DebugSource source, DebugType type, uint id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam);
+	internal static void DetachShader(uint program, uint shader)
+	{
+		DetachShaderInstance(program, shader);
+	}
+
+	internal static void DeleteProgram(uint handle)
+	{
+		DeleteProgramInstance(handle);
+	}
+
+	#endregion
+
+	private delegate void PrivateDebugProc(DebugSource source, DebugType type, uint id, DebugSeverity severity, int length, IntPtr message, IntPtr userParam);
 	internal delegate void DebugProc(DebugSource source, DebugType type, uint id, DebugSeverity severity, string message);
 	private delegate void PrivateDebugProcARB(uint source, uint type, uint id, uint severity, int length, in sbyte message, in byte userParam);
 	private delegate void PrivateDebugProcKHR(uint source, uint type, uint id, uint severity, int length, in sbyte message, in byte userParam);
