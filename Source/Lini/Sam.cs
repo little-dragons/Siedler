@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Lini.Miscellaneous;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
 using Lini.Windowing;
@@ -8,113 +9,147 @@ namespace Lini;
 public static class Sam
 {
     public static GLFW.WindowRef WindowRef { get; private set; }
+    public static bool IsInitialized { get; private set; }
 
-    public static void Initialize(WindowInfo winInfo)
+    public static bool Initialize(WindowInfo winInfo)
     {
-        GLFW.Init();
-        GLFW.WindowHint(GLFW.ContextVersionMajor, 4);
-        GLFW.WindowHint(GLFW.ContextVersionMinor, 2);
-        WindowRef = GLFW.CreateWindow(winInfo.Width, winInfo.Height, winInfo.Title, winInfo.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, 0);
-        GLFW.MakeContextCurrent(WindowRef);
-        GL.Load(GLFW.GetProcAddress);
+        if (IsInitialized)
+            return IsInitialized;
 
-        
-        GL.DebugProc callback = (s, t, id, sev, message) =>
+        Logger.Info("Initializing...", Logger.Source.Control);
+
+        GLFW.GetVersion(out int major, out int minor, out int rev);
+        Version glfwVersion = new(major, minor, rev);
+
+        Logger.Info($"Using version {glfwVersion}.", Logger.Source.GLFW);
+
+        if (!GLFW.Init())
         {
-            Console.WriteLine("GL debug callback says: " + message);
-        };
+            Logger.Info("GLFW failed to initialize, aborting.", Logger.Source.GLFW);
+            return IsInitialized;
+        }
 
-        GL.Enable(EnableCap.DebugOutput);
+        GLFW.SetErrorCallback((ec, str) =>
+        {
+            Logger.Error($"{ec} - {str}", Logger.Source.GLFWCallback);
+        });
 
-        GL.DebugMessageCallback(callback);
-        GL.DebugMessageInsert(DebugSource.Application, DebugType.Marker, 0, DebugSeverity.Notification, "Test message injected.");
+        GLFW.WindowHint(GLFW.WindowHintType.ClientApi, GLFW.WindowValue.OpenGLAPI);
+        GLFW.WindowHint(GLFW.WindowHintType.OpenGLProfile, GLFW.WindowValue.OpenGLCoreProfile);
+        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMajor, (GLFW.WindowValue)4);
+        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, (GLFW.WindowValue)0);
+
+        WindowRef = GLFW.CreateWindow(winInfo.Width, winInfo.Height, winInfo.Title, winInfo.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, 0);
+        if (WindowRef.Raw == 0)
+        {
+            Logger.Error("Could not make window, aborting.", Logger.Source.GLFW);
+            return IsInitialized;
+        }
 
 
+        Thread.CurrentThread.Name = "MainThread";
+        RenderThread.Initialize();
+
+        RenderThread.Do(() =>
+        {
+            GLFW.MakeContextCurrent(WindowRef);
+            GL.Load(GLFW.GetProcAddress);
 
 
-        string vertexShaderSource =
-            """
-            #version 330
+            GL.DebugProc callback = (s, t, id, sev, message) =>
+            {
+                Logger.Level level = sev switch
+                {
+                    DebugSeverity.High => Logger.Level.Error,
+                    DebugSeverity.Medium or DebugSeverity.Low => Logger.Level.Warning,
+                    _ => Logger.Level.Info
+                };
 
-            layout(location = 0) in vec3 coord;
-            void main() {
-                gl_Position = vec4(coord, 1.0);
-            }
-            """;
+                Logger.Write(level, message, Logger.Source.GLCallback);
+            };
 
-        string fragmentShaderSource =
-            """
-            #version 330
+            GL.Enable(EnableCap.DebugOutput);
 
-            out vec4 color;
-            void main() {
-                color = vec4(1.0);
-            }
-            """;
+            GL.DebugMessageCallback(callback);
+            GL.DebugMessageInsert(DebugSource.Application, DebugType.Marker, 0, DebugSeverity.Notification, "Test message injected.");
 
-        GL.ClearColor(1.0f, 0.5f, 0.2f, 1.0f);
+            GL.ClearColor(1.0f, 0.5f, 0.2f, 1.0f);
 
-        var prog = GL.CreateProgram();
-        var vertexShader = GL.CreateShader(ShaderType.Vertex);
-        var fragmentShader = GL.CreateShader(ShaderType.Fragment);
-        GL.ShaderSource(vertexShader, vertexShaderSource);
-        GL.ShaderSource(fragmentShader, fragmentShaderSource);
+            string vertexShaderSource =
+                """
+                #version 330
 
-        GL.CompileShader(vertexShader);
-        GL.CompileShader(fragmentShader);
+                layout(location = 0) in vec3 coord;
+                void main() {
+                    gl_Position = vec4(coord, 1.0);
+                }
+                """;
 
-        GL.AttachShader(prog, vertexShader);
-        GL.AttachShader(prog, fragmentShader);
+            string fragmentShaderSource =
+                """
+                #version 330
 
-        GL.LinkProgram(prog);
-        GL.UseProgram(prog);
+                out vec4 color;
+                void main() {
+                    color = vec4(1.0);
+                }
+                """;
+
+
+            var prog = GL.CreateProgram();
+            var vertexShader = GL.CreateShader(ShaderType.Vertex);
+            var fragmentShader = GL.CreateShader(ShaderType.Fragment);
+            GL.ShaderSource(vertexShader, vertexShaderSource);
+            GL.ShaderSource(fragmentShader, fragmentShaderSource);
+
+            GL.CompileShader(vertexShader);
+            GL.CompileShader(fragmentShader);
+
+            GL.AttachShader(prog, vertexShader);
+            GL.AttachShader(prog, fragmentShader);
+
+            GL.LinkProgram(prog);
+            GL.UseProgram(prog);
+        });
+
+        RenderThread.Finish();
+
+        IsInitialized = true;
+        return IsInitialized;
     }
 
-    public static void Terminate() {
+    public static void Terminate()
+    {
+        if (!IsInitialized)
+            return;
+
+        // GLFW terminatino requires that a context is only current on the main thread.
+        RenderThread.Do(() => GLFW.MakeContextCurrent(new GLFW.WindowRef()));
+        RenderThread.FinishAndTerminate();
+
         GLFW.Terminate();
+
+        IsInitialized = true;
+        Logger.Info("Terminated.", Logger.Source.Control);
     }
 
     public static void Run(Mesh mesh)
     {
+        if (!IsInitialized)
+            return;
 
-
-        // var vertBuffer = GL.GenBuffer();
-        // var indexBuffer = GL.GenBuffer();
-
-        // var vao = GL.GenVertexArray();
-
-        // GL.BindVertexArray(vao);
-
-        // GL.BindBuffer(BufferTarget.Array, vertBuffer);
-        // var vertices =
-        //     new float[9] { 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.0f, 0.75f, 0.0f };
-        // ReadOnlySpan<float> vertSpan = new(vertices);
-
-        // GL.BufferData(BufferTarget.Array, vertSpan, BufferUsage.StaticDraw);
-
-        // GL.BindBuffer(BufferTarget.ElementArray, indexBuffer);
-        // var indices =
-        //     new uint[3] { 0, 1, 2 };
-        // ReadOnlySpan<uint> indicesSpan = new(indices);
-        // GL.BufferData(BufferTarget.ElementArray, indicesSpan, BufferUsage.StaticDraw);
-
-
-        // GL.EnableVertexAttribArray(0);
-        // GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 0, 0);
-
+        Logger.Info("Running main loop...", Logger.Source.Control);
 
         while (!GLFW.WindowShouldClose(WindowRef))
         {
-            GL.Clear(ClearBufferMask.Color);
+            RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
 
-            // GL.DrawElements(PrimitiveType.Triangles, 3, DrawElementsType.Int, 0);
             mesh.Draw();
 
+            RenderThread.Finish();
+
             GLFW.PollEvents();
-            GLFW.SwapBuffers(WindowRef);
+            RenderThread.Do(() => GLFW.SwapBuffers(WindowRef));
         }
-
-        GLFW.Terminate();
-
     }
 }

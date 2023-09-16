@@ -1368,7 +1368,7 @@ internal enum MatrixMode : uint
 	Texture = 5890,
 }
 
-internal enum Buffer : uint
+internal enum BufferType : uint
 {
 	Color = 6144,
 	Depth = 6145,
@@ -3518,10 +3518,10 @@ internal static class GL
 	private delegate void TexParameterIuivDelegate(TextureTarget target, TextureParameterName pname, in uint @params);
 	private delegate void GetTexParameterIivDelegate(TextureTarget target, GetTextureParameter pname, out int @params);
 	private delegate void GetTexParameterIuivDelegate(TextureTarget target, GetTextureParameter pname, out uint @params);
-	private delegate void ClearBufferivDelegate(Buffer buffer, int drawbuffer, in int value);
-	private delegate void ClearBufferuivDelegate(Buffer buffer, int drawbuffer, in uint value);
-	private delegate void ClearBufferfvDelegate(Buffer buffer, int drawbuffer, in float value);
-	private delegate void ClearBufferfiDelegate(Buffer buffer, int drawbuffer, float depth, int stencil);
+	private delegate void ClearBufferivDelegate(BufferType buffer, int drawbuffer, in int value);
+	private delegate void ClearBufferuivDelegate(BufferType buffer, int drawbuffer, in uint value);
+	private delegate void ClearBufferfvDelegate(BufferType buffer, int drawbuffer, in float value);
+	private delegate void ClearBufferfiDelegate(BufferType buffer, int drawbuffer, float depth, int stencil);
 	private delegate IntPtr GetStringiDelegate(StringName name, uint index);
 	[return: MarshalAs(UnmanagedType.I1)]
 	private delegate bool IsRenderbufferDelegate(uint renderbuffer);
@@ -3837,10 +3837,10 @@ internal static class GL
 	private delegate void NamedFramebufferReadBufferDelegate(uint framebuffer, ColorBuffer src);
 	private delegate void InvalidateNamedFramebufferDataDelegate(uint framebuffer, int numAttachments, in uint attachments);
 	private delegate void InvalidateNamedFramebufferSubDataDelegate(uint framebuffer, int numAttachments, in uint attachments, int x, int y, int width, int height);
-	private delegate void ClearNamedFramebufferivDelegate(uint framebuffer, Buffer buffer, int drawbuffer, in int value);
-	private delegate void ClearNamedFramebufferuivDelegate(uint framebuffer, Buffer buffer, int drawbuffer, in uint value);
-	private delegate void ClearNamedFramebufferfvDelegate(uint framebuffer, Buffer buffer, int drawbuffer, in float value);
-	private delegate void ClearNamedFramebufferfiDelegate(uint framebuffer, Buffer buffer, int drawbuffer, float depth, int stencil);
+	private delegate void ClearNamedFramebufferivDelegate(uint framebuffer, BufferType buffer, int drawbuffer, in int value);
+	private delegate void ClearNamedFramebufferuivDelegate(uint framebuffer, BufferType buffer, int drawbuffer, in uint value);
+	private delegate void ClearNamedFramebufferfvDelegate(uint framebuffer, BufferType buffer, int drawbuffer, in float value);
+	private delegate void ClearNamedFramebufferfiDelegate(uint framebuffer, BufferType buffer, int drawbuffer, float depth, int stencil);
 	private delegate void BlitNamedFramebufferDelegate(uint readFramebuffer, uint drawFramebuffer, int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, ClearBufferMask mask, BlitFramebufferFilter filter);
 	private delegate FramebufferStatus CheckNamedFramebufferStatusDelegate(uint framebuffer, FramebufferTarget target);
 	private delegate void GetNamedFramebufferParameterivDelegate(uint framebuffer, GetFramebufferParameter pname, out int param);
@@ -4854,6 +4854,10 @@ internal static class GL
     {
         EnableInstance(cap);
     }
+
+	internal static void DeleteBuffer(uint buffer) {
+		DeleteBuffersInstance(1, in buffer);
+	}
 
     #endregion
 
