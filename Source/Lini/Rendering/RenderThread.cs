@@ -3,23 +3,29 @@ using Lini.Miscellaneous;
 
 namespace Lini.Rendering;
 
+/// <summary>
+/// The render thread is the thread where all OpenGL calls and some corresponding GLFW calls
+/// (<see cref="Windowing.GLFW.SwapBuffers"/> and <see cref="Windowing.GLFW.MakeContextCurrent"/>)
+/// have to be executed. Items can be added to the execution list via <see cref="Do"/>.
+/// The render thread has to be initialized and terminated. Items can be forced to be executed now via
+/// <see cref="Finish"/>.
+/// 
+/// There still is a debate ongoing whether the <see cref="WorkItems"/> should take Actions or some other
+/// kind of maybe discriminated union. Garbage collection is the main concern.
+/// </summary>
 internal static class RenderThread
 {
     private static ConcurrentQueue<Action> WorkItems = null!;
     private static Thread ThreadHandle = null!;
 
-    private static volatile bool ThreadToTerminate;
-    private static object ThreadToTerminateLock = null!;
 
     private static AutoResetEvent StartThreadEvent = null!;
     private static ManualResetEventSlim WorkDoneEvent = null!;
 
     internal static void Initialize()
     {
-        ThreadToTerminate = false;
         StartThreadEvent = new(false);
         WorkDoneEvent = new(false);
-        ThreadToTerminateLock = new();
         WorkItems = new();
 
         ThreadHandle = new(RenderThreadLoop)
@@ -31,28 +37,38 @@ internal static class RenderThread
         Logger.Info("Started.", Logger.Source.RenderThread);
     }
 
+    /// <summary>
+    /// This command kills the render thread, but still executes all items in the queue.
+    /// This command blocks until the render thread has died, as such, this command may not be called
+    /// from the render thread itself.
+    /// </summary>
     internal static void FinishAndTerminate()
     {
         Logger.Info("Terminate command received.", Logger.Source.RenderThread);
-        lock (ThreadToTerminateLock)
-            ThreadToTerminate = true;
-
-        Finish();
+        WorkItems.Enqueue(() => ThreadToTerminate = true);
+        StartThreadEvent.Set();
+        ThreadHandle.Join();
     }
 
+    /// <summary>
+    /// This variable may only be accessed by the render thread.
+    /// </summary>
+    private static bool ThreadToTerminate;
+
+    /// <summary>
+    /// The loop of the render threads.
+    /// </summary>
     private static void RenderThreadLoop()
     {
-        bool terminate = false;
-        while (!terminate)
+        ThreadToTerminate = false;
+        while (!ThreadToTerminate)
         {
             StartThreadEvent.WaitOne();
+
             while (WorkItems.TryDequeue(out var item))
                 item();
 
             WorkDoneEvent.Set();
-
-            lock (ThreadToTerminateLock)
-                terminate = ThreadToTerminate;
         }
 
         Logger.Info("Terminated.", Logger.Source.RenderThread);
@@ -77,6 +93,11 @@ internal static class RenderThread
         }
     }
 
+    /// <summary>
+    /// This command starts the render thread and waits until all items
+    /// from the queue are worked through. The render thread signals the calling thread
+    /// and execution resumes - this is by design a blocking function.
+    /// </summary>
     internal static void Finish()
     {
         WorkDoneEvent.Reset();

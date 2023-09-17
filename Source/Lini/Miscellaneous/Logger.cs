@@ -12,7 +12,8 @@ public static class Logger
         RenderThread,
         MainThread,
         GLFW,
-        GL
+        GL,
+        Resources
     }
 
     public static void Info(string message, Source? source = null)

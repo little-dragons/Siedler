@@ -27,6 +27,19 @@ internal class Program
 
     public Program(IEnumerable<Shader> shaders)
     {
+        if (!shaders.Any(x => x.Type == ShaderType.Vertex))
+            Logger.Warn("The given shaders did not include a vertex shader.", Logger.Source.GL);
+
+        if (!shaders.Any(x => x.Type == ShaderType.Fragment))
+            Logger.Warn("The given shaders did not include a fragment shader.", Logger.Source.GL);
+
+        if (shaders.DistinctBy(x => x.Type).Count() < shaders.Count())
+        {
+            Logger.Warn("The given shaders included multiple shaders of type(s):" +
+                $"{shaders.Where(x => shaders.Where(y => y.Type == x.Type).Count() > 1).Aggregate("", string.Concat)}.", 
+                Logger.Source.GL);
+        }
+
         Handle = new(GL.CreateProgram());
         foreach (var shader in shaders)
             shader.AttachTo(Handle.Value);

@@ -16,7 +16,9 @@ public static class Sam
         if (IsInitialized)
             return IsInitialized;
 
-        Logger.Info("Initializing Lini engine.", Logger.Source.MainThread);
+        Logger.Info("Initializing Lini engine. Hi!", Logger.Source.MainThread);
+
+        Resources.Initialize();
 
         GLFW.GetVersion(out int major, out int minor, out int rev);
         Version glfwVersion = new(major, minor, rev);
@@ -65,7 +67,7 @@ public static class Sam
                     _ => Logger.Level.Info
                 };
 
-                Logger.Write(level, message, Logger.Source.GLCallback);
+                Logger.Write(level, $"ID {id}. {message}", Logger.Source.GLCallback);
             };
 
             GL.Enable(EnableCap.DebugOutput);
@@ -81,6 +83,8 @@ public static class Sam
 
         RenderThread.Finish();
 
+        Logger.Info("Initializing done.", Logger.Source.MainThread);
+
         IsInitialized = true;
         return IsInitialized;
     }
@@ -90,6 +94,7 @@ public static class Sam
         if (!IsInitialized)
             return;
 
+        Logger.Info("Terminating.", Logger.Source.MainThread);
         SharedObjects.Terminate();
 
         // GLFW termination requires that a context is only current on the main thread.

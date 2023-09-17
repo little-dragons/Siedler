@@ -11,28 +11,9 @@ internal static class SharedObjects
     {
         Logger.Info("Loading shared GL objects.", Logger.Source.GL);
 
-        string vertexShaderSource =
-            """
-            #version 330
 
-            layout(location = 0) in vec3 coord;
-            void main() {
-                gl_Position = vec4(coord, 1.0);
-            }
-            """;
-
-        string fragmentShaderSource =
-            """
-            #version 330
-
-            out vec4 color;
-            void main() {
-                color = vec4(1.0);
-            }
-            """;
-
-        Shader vertexShader = new(ShaderType.Vertex, vertexShaderSource);
-        Shader fragmentShader = new(ShaderType.Fragment, fragmentShaderSource);
+        Shader vertexShader = new(ShaderType.Vertex, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleVertex.glsl")));
+        Shader fragmentShader = new(ShaderType.Fragment, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleFragment.glsl")));
 
         Simple = new(new[] { vertexShader, fragmentShader });
 
