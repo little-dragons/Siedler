@@ -3,17 +3,17 @@ using Lini.Rendering;
 using Lini.Windowing;
 
 Run();
-Run();
+// Run();
 
 
 static void Run()
 {
     WindowInfo info = new()
     {
-        Width = 800,
+        Width = 600,
         Height = 600,
         FullScreen = false,
-        Title = "Linchen ist toll"
+        Title = "Lini"
     };
 
     Sam.Initialize(info);

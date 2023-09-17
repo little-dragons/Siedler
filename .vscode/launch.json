@@ -9,7 +9,7 @@
             "program": "${workspaceFolder}/Source/Client/bin/Debug/net7.0/Client.dll",
             "args": [],
             "env": {
-                "RESOURCE_DIR": "${workspaceFolder}"
+                "RESOURCE_DIR": "${workspaceFolder}/Resources"
             },
             "cwd": "${workspaceFolder}/Source/Client",
             "console": "internalConsole",

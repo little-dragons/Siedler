@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Lini.Miscellaneous;
 using Lini.Rendering;
@@ -10,13 +11,14 @@ public static class Sam
 {
     public static GLFW.WindowRef WindowRef { get; private set; }
     public static bool IsInitialized { get; private set; }
+    public static readonly Version Version = new(0, 0, 1);
 
     public static bool Initialize(WindowInfo winInfo)
     {
         if (IsInitialized)
             return IsInitialized;
 
-        Logger.Info("Initializing Lini engine. Hi!", Logger.Source.MainThread);
+        Logger.Info($"Initializing Lini engine {Version}. Hi!", Logger.Source.MainThread);
 
         Resources.Initialize();
 
@@ -112,10 +114,16 @@ public static class Sam
         if (!IsInitialized)
             return;
 
+        var time = DateTime.Now.Ticks;
+
         Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
         while (!GLFW.WindowShouldClose(WindowRef))
         {
+            RenderThread.Do(() => {
+                SharedObjects.Simple.Bind();
+                SharedObjects.Simple.SetUniform("proj", Matrix4x4.CreateRotationZ(MathF.PI * ((DateTime.Now.Ticks - time) / 100000000f)));
+            });
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
 
             mesh.Draw();

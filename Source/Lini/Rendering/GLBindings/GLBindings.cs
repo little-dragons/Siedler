@@ -1,5 +1,6 @@
 namespace Lini.Rendering.GLBindings;
 
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 internal enum EnableCap : uint
@@ -3386,7 +3387,7 @@ internal static class GL
 	private delegate void GetShaderivDelegate(uint shader, ShaderParameterName pname, out int @params);
 	private delegate void GetShaderInfoLogDelegate(uint shader, int bufSize, out int length, nint infoLog);
 	private delegate void GetShaderSourceDelegate(uint shader, int bufSize, out int length, out sbyte source);
-	private delegate int GetUniformLocationDelegate(uint program, in sbyte name);
+	private delegate int GetUniformLocationDelegate(uint program, [MarshalAs(UnmanagedType.LPStr)] string name);
 	private delegate void GetUniformfvDelegate(uint program, int location, out float @params);
 	private delegate void GetUniformivDelegate(uint program, int location, out int @params);
 	private delegate void GetVertexAttribdvDelegate(uint index, VertexAttribPropertyARB pname, out double @params);
@@ -4874,6 +4875,31 @@ internal static class GL
 	internal static void DeleteProgram(uint handle)
 	{
 		DeleteProgramInstance(handle);
+	}
+
+	internal static int GetUniformLocation(uint program, string name)
+	{
+		return GetUniformLocationInstance(program, name);
+	}
+	internal static void Uniform(int location, float value)
+	{
+		Uniform1fInstance(location, value);
+	}
+	internal static void Uniform(int location, Vector2 vector)
+	{
+		Uniform2fInstance(location, vector.X, vector.Y);
+	}
+	internal static void Uniform(int location, in Vector3 vector)
+	{
+		Uniform3fInstance(location, vector.X, vector.Y, vector.Z);
+	}
+	internal static void Uniform(int location, in Vector4 vector)
+	{
+		Uniform4fInstance(location, vector.X, vector.Y, vector.Z, vector.W);
+	}
+		internal static void Uniform(int location, in Matrix4x4 mat)
+	{
+		UniformMatrix4fvInstance(location, 1, false, in mat.M11);
 	}
 
 	#endregion

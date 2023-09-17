@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Lini.Miscellaneous;
 
@@ -36,7 +37,7 @@ internal class Program
         if (shaders.DistinctBy(x => x.Type).Count() < shaders.Count())
         {
             Logger.Warn("The given shaders included multiple shaders of type(s):" +
-                $"{shaders.Where(x => shaders.Where(y => y.Type == x.Type).Count() > 1).Aggregate("", string.Concat)}.", 
+                $"{shaders.Where(x => shaders.Where(y => y.Type == x.Type).Count() > 1).Aggregate("", string.Concat)}.",
                 Logger.Source.GL);
         }
 
@@ -52,7 +53,33 @@ internal class Program
 
     public void Bind()
     {
+        WarnIfInvalid();
         GL.UseProgram(Handle.Value);
+    }
+
+
+    private readonly Dictionary<string, int> UniformLocations = new();
+    public void SetUniform<T>(string name, T value) where T : unmanaged
+    {
+        WarnIfInvalid();
+        if (!UniformLocations.TryGetValue(name, out int loc))
+        {
+            loc = GL.GetUniformLocation(Handle.Value, name);
+            UniformLocations.Add(name, loc);
+        }
+
+        if (value is float v1)
+            GL.Uniform(loc, v1);
+        else if (value is Vector2 v2)
+            GL.Uniform(loc, v2);
+        else if (value is Vector3 v3)
+            GL.Uniform(loc, v3);
+        else if (value is Vector4 v4)
+            GL.Uniform(loc, v4);
+        else if (value is Matrix4x4 mat4)
+            GL.Uniform(loc, mat4);
+        else
+            Logger.Warn($"Could not set uniform of type {typeof(T)}.", Logger.Source.GL);
     }
 
     private void WarnIfInvalid()
