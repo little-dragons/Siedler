@@ -2,22 +2,22 @@ namespace Lini.Windowing;
 
 using System.Runtime.InteropServices;
 
-public static class GLFW
+internal static class GLFW
 {
-    public const string LibName = "glfw";
+    internal const string LibName = "glfw";
 
-    public readonly struct WindowRef
+    internal readonly struct WindowRef
     {
-        public readonly IntPtr Raw;
-        public static readonly WindowRef Null = new();
+        internal readonly IntPtr Raw;
+        internal static readonly WindowRef Null = new();
     }
-    public readonly struct MonitorRef
+    internal readonly struct MonitorRef
     {
-        public readonly IntPtr Raw;
-        public static readonly MonitorRef Null = new();
+        internal readonly IntPtr Raw;
+        internal static readonly MonitorRef Null = new();
     }
 
-    public enum WindowHintType
+    internal enum WindowHintType
     {
         Focused = 0x00020001,
         Resizable = 0x00020003,
@@ -58,7 +58,7 @@ public static class GLFW
         ContextCreationAPI = 0x0002200B,
     }
 
-    public enum WindowAttributeType
+    internal enum WindowAttributeType
     {
         Focused = 0x00020001,
         Iconified = 0x00020002,
@@ -83,7 +83,7 @@ public static class GLFW
         ContextNoError = 0x0002200A,
     }
 
-    public enum WindowValue
+    internal enum WindowValue
     {
         NoAPI = 0,
         OpenGLAPI = 0x00030001,
@@ -94,14 +94,14 @@ public static class GLFW
         OpenGLCompatProfile = 0x00032002,
     }
 
-    public enum KeyPressType
+    internal enum KeyState
     {
         Release = 0,
         Press = 1,
         Repeate = 2,
     }
 
-    public enum Key
+    internal enum Key
     {
         Unknown = -1,
         Space = 32,
@@ -190,7 +190,7 @@ public static class GLFW
         RightControl = 345,
         RightAlt = 346
     }
-    public enum Mod
+    internal enum Mod
     {
         Shift = 0x1,
         Control = 0x2,
@@ -199,14 +199,14 @@ public static class GLFW
         CapsLock = 0x10,
         NumLock = 0x20,
     }
-    public enum Mouse
+    internal enum Mouse
     {
         Left = 0,
         Right = 1,
         Middle = 2
     }
 
-    public enum ErrorCode
+    internal enum ErrorCode
     {
         NoError = 0,
         NotInitialized = 0x00010001,
@@ -224,48 +224,64 @@ public static class GLFW
 
 
     [DllImport(LibName, EntryPoint = "glfwInit")]
-    public static extern bool Init();
+    internal static extern bool Init();
 
     [DllImport(LibName, EntryPoint = "glfwTerminate")]
-    public static extern void Terminate();
+    internal static extern void Terminate();
 
     
     [DllImport(LibName, EntryPoint = "glfwGetVersion")]
-    public static extern void GetVersion(out int major, out int minor, out int revision);
+    internal static extern void GetVersion(out int major, out int minor, out int revision);
 
     [DllImport(LibName, EntryPoint = "glfwCreateWindow")]
-    public static extern WindowRef CreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, MonitorRef monitor, IntPtr _2);
+    internal static extern WindowRef CreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, MonitorRef monitor, IntPtr _2);
 
     [DllImport(LibName, EntryPoint = "glfwWindowShouldClose")]
-    public static extern bool WindowShouldClose(WindowRef window);
+    internal static extern bool WindowShouldClose(WindowRef window);
 
     [DllImport(LibName, EntryPoint = "glfwPollEvents")]
-    public static extern void PollEvents();
+    internal static extern void PollEvents();
 
     [DllImport(LibName, EntryPoint = "glfwMakeContextCurrent")]
-    public static extern void MakeContextCurrent(WindowRef window);
+    internal static extern void MakeContextCurrent(WindowRef window);
 
     [DllImport(LibName, EntryPoint = "glfwWindowHint")]
-    public static extern void WindowHint(WindowHintType hint, WindowValue value);
+    internal static extern void WindowHint(WindowHintType hint, WindowValue value);
 
     [DllImport(LibName, EntryPoint = "glfwSwapBuffers")]
-    public static extern void SwapBuffers(WindowRef window);
-
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public delegate void GLProc();
+    internal static extern void SwapBuffers(WindowRef window);
 
     [DllImport(LibName, EntryPoint = "glfwGetProcAddress")]
-    public static extern IntPtr GetProcAddress([MarshalAs(UnmanagedType.LPStr)] string procname);
+    internal static extern IntPtr GetProcAddress([MarshalAs(UnmanagedType.LPStr)] string procname);
 
     [DllImport(LibName, EntryPoint = "glfwGetPrimaryMonitor")]
-    public static extern MonitorRef GetPrimaryMonitor();
+    internal static extern MonitorRef GetPrimaryMonitor();
+
+    [DllImport(LibName, EntryPoint = "glfwGetKey")]
+    internal static extern KeyState GetKey(WindowRef window, Key key);
+
+    [DllImport(LibName, EntryPoint = "glfwSetWindowMonitor")]
+    internal static extern void SetWindowMonitor(WindowRef window, MonitorRef monitor, int xpos, int ypos, int width, int height, int refreshRate);
+    
+    [DllImport(LibName, EntryPoint = "glfwGetVideoMode")]
+    internal static extern ref VideoMode GetVideoMode(MonitorRef monitor);
 
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-    public delegate void ErrorFun(ErrorCode errorCode, [MarshalAs(UnmanagedType.LPStr)] string message);
+    internal delegate void ErrorFun(ErrorCode errorCode, [MarshalAs(UnmanagedType.LPStr)] string message);
 
     [DllImport(LibName, EntryPoint = "glfwSetErrorCallback")]
-    public static extern ErrorFun SetErrorCallback(ErrorFun errorFun);
+    internal static extern ErrorFun SetErrorCallback(ErrorFun errorFun);
 
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal readonly struct VideoMode
+    {
+        internal readonly int Width;
+        internal readonly int Height;
+        internal readonly int RedBits;
+        internal readonly int GreenBits;
+        internal readonly int BlueBits;
+        internal readonly int RefreshRate;
+    }
 }

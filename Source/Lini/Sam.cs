@@ -9,7 +9,7 @@ namespace Lini;
 
 public static class Sam
 {
-    public static GLFW.WindowRef WindowRef { get; private set; }
+    private static GLFW.WindowRef WindowRef { get; set; }
     public static bool IsInitialized { get; private set; }
     public static readonly Version Version = new(0, 0, 1);
 
@@ -32,6 +32,7 @@ public static class Sam
             Logger.Info("GLFW failed to initialize, aborting.", Logger.Source.GLFW);
             return IsInitialized;
         }
+
 
         GLFW.SetErrorCallback((ec, str) =>
         {
@@ -72,6 +73,7 @@ public static class Sam
                 Logger.Write(level, $"ID {id}. {message}", Logger.Source.GLCallback);
             };
 
+
             GL.Enable(EnableCap.DebugOutput);
 
             GL.DebugMessageCallback(callback);
@@ -80,7 +82,7 @@ public static class Sam
             GL.ClearColor(1.0f, 0.5f, 0.2f, 1.0f);
 
             SharedObjects.Initialize();
-            SharedObjects.Simple.Bind();
+            SharedObjects.SimpleProgram.Bind();
         });
 
         RenderThread.Finish();
@@ -120,11 +122,22 @@ public static class Sam
 
         while (!GLFW.WindowShouldClose(WindowRef))
         {
-            RenderThread.Do(() => {
-                SharedObjects.Simple.Bind();
-                SharedObjects.Simple.SetUniform("proj", Matrix4x4.CreateRotationZ(MathF.PI * ((DateTime.Now.Ticks - time) / 100000000f)));
+            RenderThread.Do(() =>
+            {
+                SharedObjects.SimpleProgram.Bind();
+                SharedObjects.SimpleProgram.SetUniform("proj", Matrix4x4.CreateRotationZ(MathF.PI * ((DateTime.Now.Ticks - time) / 100000000f)));
             });
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
+
+            // if (GLFW.GetKey(WindowRef, GLFW.Key.H) == GLFW.KeyState.Release)
+            // {
+            //     GLFW.SetWindowMonitor(WindowRef, GLFW.GetPrimaryMonitor(), 0, 0, 900, 900, 60);
+            // }
+
+            // if (GLFW.GetKey(WindowRef, GLFW.Key.H) == GLFW.KeyState.Press)
+            // {
+            //     GLFW.SetWindowMonitor(WindowRef, GLFW.MonitorRef.Null, 0, 0, 900, 900, 60);
+            // }
 
             mesh.Draw();
 

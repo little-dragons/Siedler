@@ -4897,7 +4897,7 @@ internal static class GL
 	{
 		Uniform4fInstance(location, vector.X, vector.Y, vector.Z, vector.W);
 	}
-		internal static void Uniform(int location, in Matrix4x4 mat)
+	internal static void Uniform(int location, in Matrix4x4 mat)
 	{
 		UniformMatrix4fvInstance(location, 1, false, in mat.M11);
 	}

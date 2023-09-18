@@ -6,7 +6,7 @@ namespace Lini.Rendering;
 
 internal static class SharedObjects
 {
-    public static Program Simple = null!;
+    public static Program SimpleProgram = null!;
 
     internal static void Initialize()
     {
@@ -16,7 +16,7 @@ internal static class SharedObjects
         Shader vertexShader = new(ShaderType.Vertex, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleVertex.glsl")));
         Shader fragmentShader = new(ShaderType.Fragment, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleFragment.glsl")));
 
-        Simple = new(new[] { vertexShader, fragmentShader });
+        SimpleProgram = new(new[] { vertexShader, fragmentShader });
 
         vertexShader.Delete();
         fragmentShader.Delete();
@@ -25,6 +25,6 @@ internal static class SharedObjects
     internal static void Terminate()
     {
         Logger.Info("Deleting shared GL objects.", Logger.Source.GL);
-        Simple.Delete();
+        SimpleProgram.Delete();
     }
 }
