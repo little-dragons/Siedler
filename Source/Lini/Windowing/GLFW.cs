@@ -6,6 +6,9 @@ internal static class GLFW
 {
     internal const string LibName = "glfw";
 
+    // this warning is because "the fields Raw are never set and will always have their default
+    // value" - apparently not, stupid compiler lol
+#pragma warning disable CS0649
     internal readonly struct WindowRef
     {
         internal readonly IntPtr Raw;
@@ -16,6 +19,8 @@ internal static class GLFW
         internal readonly IntPtr Raw;
         internal static readonly MonitorRef Null = new();
     }
+#pragma warning restore CS0649
+
 
     internal enum WindowHintType
     {
@@ -229,9 +234,14 @@ internal static class GLFW
     [DllImport(LibName, EntryPoint = "glfwTerminate")]
     internal static extern void Terminate();
 
-    
+
     [DllImport(LibName, EntryPoint = "glfwGetVersion")]
     internal static extern void GetVersion(out int major, out int minor, out int revision);
+    internal static Version GetVersion()
+    {
+        GetVersion(out int major, out int minor, out int rev);
+        return new(major, minor, rev);
+    }
 
     [DllImport(LibName, EntryPoint = "glfwCreateWindow")]
     internal static extern WindowRef CreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, MonitorRef monitor, IntPtr _2);
@@ -262,9 +272,12 @@ internal static class GLFW
 
     [DllImport(LibName, EntryPoint = "glfwSetWindowMonitor")]
     internal static extern void SetWindowMonitor(WindowRef window, MonitorRef monitor, int xpos, int ypos, int width, int height, int refreshRate);
-    
+
     [DllImport(LibName, EntryPoint = "glfwGetVideoMode")]
-    internal static extern ref VideoMode GetVideoMode(MonitorRef monitor);
+    internal static extern ref readonly VideoMode GetVideoMode(MonitorRef monitor);
+
+    [DllImport(LibName, EntryPoint = "glfwSwapInterval")]
+    internal static extern void SwapInterval(bool useVsync);
 
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -275,13 +288,13 @@ internal static class GLFW
 
 
     [StructLayout(LayoutKind.Sequential)]
-    internal readonly struct VideoMode
+    internal struct VideoMode
     {
-        internal readonly int Width;
-        internal readonly int Height;
-        internal readonly int RedBits;
-        internal readonly int GreenBits;
-        internal readonly int BlueBits;
-        internal readonly int RefreshRate;
+        internal int Width;
+        internal int Height;
+        internal int RedBits;
+        internal int GreenBits;
+        internal int BlueBits;
+        internal int RefreshRate;
     }
 }

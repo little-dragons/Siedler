@@ -22,10 +22,8 @@ public static class Sam
 
         Resources.Initialize();
 
-        GLFW.GetVersion(out int major, out int minor, out int rev);
-        Version glfwVersion = new(major, minor, rev);
 
-        Logger.Info($"Using version {glfwVersion}.", Logger.Source.GLFW);
+        Logger.Info($"Using version {GLFW.GetVersion()}.", Logger.Source.GLFW);
 
         if (!GLFW.Init())
         {
@@ -58,6 +56,7 @@ public static class Sam
         RenderThread.Do(() =>
         {
             GLFW.MakeContextCurrent(WindowRef);
+            GLFW.SwapInterval(true);
             GL.Load(GLFW.GetProcAddress);
 
 
