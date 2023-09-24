@@ -117,6 +117,14 @@ public static class Sam
 
         var time = DateTime.Now.Ticks;
 
+        Rendering.GLBindings.Texture tex = null!;
+        RenderThread.Do(() => {
+            tex = new(Image.Png.PngReader.ReadFromBytes(File.ReadAllBytes(Resources.PathFor(Resources.Type.Texture, "pews.png")))!);
+            tex.Bind();
+            SharedObjects.SimpleProgram.SetUniform("tex", 0);
+        });
+        RenderThread.Finish();
+
         Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
         while (!GLFW.WindowShouldClose(WindowRef))

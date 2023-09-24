@@ -21,9 +21,9 @@ static void Run()
     var vertices =
         new Vertex[] {
         new() { TextureCoordinates = new(0, 0), Position = new(0.5f, -0.5f, 0.0f) },
-        new() { TextureCoordinates = new(0, 0), Position = new(-0.5f, -0.5f, 0.0f) },
-        new() { TextureCoordinates = new(0, 0), Position = new(0.5f, 0.5f, 0.0f) },
-        new() { TextureCoordinates = new(0, 0), Position = new(-0.5f, 0.5f, 0.0f) },
+        new() { TextureCoordinates = new(1, 0), Position = new(-0.5f, -0.5f, 0.0f) },
+        new() { TextureCoordinates = new(0, 1), Position = new(0.5f, 0.5f, 0.0f) },
+        new() { TextureCoordinates = new(1, 1), Position = new(-0.5f, 0.5f, 0.0f) },
             };
     var indices =
         new uint[] { 0, 1, 2, 1, 2, 3 };

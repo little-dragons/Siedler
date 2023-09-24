@@ -70,6 +70,8 @@ internal class Program
 
         if (value is float v1)
             GL.Uniform(loc, v1);
+        if (value is int i)
+            GL.Uniform(loc, i);
         else if (value is Vector2 v2)
             GL.Uniform(loc, v2);
         else if (value is Vector3 v3)

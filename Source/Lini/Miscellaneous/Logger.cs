@@ -13,7 +13,8 @@ public static class Logger
         MainThread,
         GLFW,
         GL,
-        Resources
+        Resources,
+        User
     }
 
     public static void Info(string message, Source? source = null)

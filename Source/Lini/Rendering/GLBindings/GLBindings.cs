@@ -3,6 +3,8 @@ namespace Lini.Rendering.GLBindings;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
+
+
 internal enum EnableCap : uint
 {
 	DebugOutputSynchronous = 33346,
@@ -1737,38 +1739,38 @@ internal enum SizedInternalFormat : uint
 
 internal enum TextureUnit : uint
 {
-	Texture0 = 33984,
-	Texture1 = 33985,
-	Texture2 = 33986,
-	Texture3 = 33987,
-	Texture4 = 33988,
-	Texture5 = 33989,
-	Texture6 = 33990,
-	Texture7 = 33991,
-	Texture8 = 33992,
-	Texture9 = 33993,
-	Texture10 = 33994,
-	Texture11 = 33995,
-	Texture12 = 33996,
-	Texture13 = 33997,
-	Texture14 = 33998,
-	Texture15 = 33999,
-	Texture16 = 34000,
-	Texture17 = 34001,
-	Texture18 = 34002,
-	Texture19 = 34003,
-	Texture20 = 34004,
-	Texture21 = 34005,
-	Texture22 = 34006,
-	Texture23 = 34007,
-	Texture24 = 34008,
-	Texture25 = 34009,
-	Texture26 = 34010,
-	Texture27 = 34011,
-	Texture28 = 34012,
-	Texture29 = 34013,
-	Texture30 = 34014,
-	Texture31 = 34015,
+	_0 = 33984,
+	_1 = 33985,
+	_2 = 33986,
+	_3 = 33987,
+	_4 = 33988,
+	_5 = 33989,
+	_6 = 33990,
+	_7 = 33991,
+	_8 = 33992,
+	_9 = 33993,
+	_10 = 33994,
+	_11 = 33995,
+	_12 = 33996,
+	_13 = 33997,
+	_14 = 33998,
+	_15 = 33999,
+	_16 = 34000,
+	_17 = 34001,
+	_18 = 34002,
+	_19 = 34003,
+	_20 = 34004,
+	_21 = 34005,
+	_22 = 34006,
+	_23 = 34007,
+	_24 = 34008,
+	_25 = 34009,
+	_26 = 34010,
+	_27 = 34011,
+	_28 = 34012,
+	_29 = 34013,
+	_30 = 34014,
+	_31 = 34015,
 }
 
 internal enum FragmentShaderTextureSourceATI : uint
@@ -4885,6 +4887,10 @@ internal static class GL
 	{
 		Uniform1fInstance(location, value);
 	}
+	internal static void Uniform(int location, int value)
+	{
+		Uniform1iInstance(location, value);
+	}
 	internal static void Uniform(int location, Vector2 vector)
 	{
 		Uniform2fInstance(location, vector.X, vector.Y);
@@ -4901,6 +4907,60 @@ internal static class GL
 	{
 		UniformMatrix4fvInstance(location, 1, false, in mat.M11);
 	}
+
+	internal static void DeleteTexture(uint handle)
+	{
+		DeleteTexturesInstance(1, handle);
+	}
+
+	internal static void BindTexture(TextureTarget target, uint value)
+	{
+		BindTextureInstance(target, value);
+	}
+
+	// internal static void TexParameter(TextureTarget target, TextureParameterName pname)
+	// {
+	//     TexParameteriInstance(target, pname, SpecialNumbers.Repeat);
+	// }
+
+	internal static void TexImage2D<T>(
+		TextureTarget target, int level, InternalFormat internalformat, int width, int height, int border,
+		PixelFormat format, PixelType type, ReadOnlySpan<T> pixels) where T : unmanaged
+	{
+		TexImage2DInstance(target, level, internalformat, width, height, border, format, type, in MemoryMarshal.GetReference(MemoryMarshal.AsBytes(pixels)));
+	}
+
+	internal static void ActiveTexture(TextureUnit unit)
+	{
+		ActiveTextureInstance(unit);
+	}
+
+	internal static void GenerateMipmap(TextureTarget target)
+	{
+		GenerateMipmapInstance(target);
+	}
+
+	internal static void TexParameter(TextureTarget target, TextureParameterName pname, TextureMagFilter value)
+	{
+		TexParameteriInstance(target, pname, (int)value);
+	}
+	internal static void TexParameter(TextureTarget target, TextureParameterName pname, TextureMinFilter value)
+	{
+		TexParameteriInstance(target, pname, (int)value);
+	}
+	internal static void TexParameter(TextureTarget target, TextureParameterName pname, TextureWrapMode value)
+	{
+		TexParameteriInstance(target, pname, (int)value);
+	}
+	internal static void PixelStore(PixelStoreParameter pname, int value)
+	{
+		PixelStoreiInstance(pname, value);
+	}
+	internal static void PixelStore(PixelStoreParameter pname, float value)
+	{
+		PixelStorefInstance(pname, value);
+	}
+
 
 	#endregion
 

@@ -5,13 +5,14 @@ public static class Resources
     public enum Type
     {
         Shader,
+        Texture,
     }
 
     /// <summary>
     /// The value of this variable should, if supplied at all, point directly to the folder name of 
     /// the resources folder.
     /// </summary>
-    public const string EnvironmentDir = "RESOURCE_DIR";
+    public const string EnvironmentDir = "LINI_RESOURCE_DIR";
     public const string FallbackName = "Resources";
 
     /// <summary>
@@ -70,6 +71,7 @@ public static class Resources
     public static string ResourceRootPath { get; private set; } = "";
     private readonly static Dictionary<Type, string> TypeFolderNames = new() {
         { Type.Shader, "Shaders" },
+        { Type.Texture, "Textures" },
     };
 
     private readonly static Dictionary<Type, string> ResolvedTypeFolders = new();
