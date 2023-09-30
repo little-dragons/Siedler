@@ -13,7 +13,7 @@ internal class UnfilteringStream : System.IO.MemoryStream
     /// The filter method in this line.
     /// </summary>
     private byte CurrentFilterMethod { get; set; }
-    
+
     /// <summary>
     /// Byte count for one scanline
     /// </summary>
@@ -44,7 +44,7 @@ internal class UnfilteringStream : System.IO.MemoryStream
     internal UnfilteringStream(IHDR ihdr, byte[] target)
         : base(target)
     {
-        ByteCountScanline = (int)Math.Ceiling((ihdr.Width * ihdr.PixelType.RequiredBits) / 8f);
+        ByteCountScanline = (int)Math.Ceiling(ihdr.Width * ihdr.PixelType.RequiredBits / 8f);
         LastLineArr = new byte[ByteCountScanline];
         CurrentLineArr = new byte[ByteCountScanline];
         CurrentPosInLine = -1;
@@ -68,11 +68,8 @@ internal class UnfilteringStream : System.IO.MemoryStream
         else return c;
     }
 
-    /// <inheritdoc/>
-    public override void Write(byte[] buffer, int offset, int count)
+    public override void Write(ReadOnlySpan<byte> work)
     {
-        ReadOnlySpan<byte> work = new(buffer, offset, count);
-
         // keeps track of where we are in the span
         int workPosition = 0;
 
@@ -240,4 +237,11 @@ internal class UnfilteringStream : System.IO.MemoryStream
             }
         }
     }
+
+    /// <inheritdoc/>
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        Write(new(buffer, offset, count));
+    }
+
 }

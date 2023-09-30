@@ -6,9 +6,7 @@ namespace Lini.Image.Png;
 
 internal struct IHDR
 {
-
     internal const byte CompressionStandard = 0;
-
     internal const byte FilterStandard = 0;
 
 
@@ -31,22 +29,24 @@ internal struct IHDR
     /// <param name="content">The exact content of the chunk.</param>
     /// <param name="ihdr">The chunk. Only use this if true is returned.</param>
     /// <returns>True if the chunk could be read successfully.</returns>
-    internal static bool Read(ReadOnlySpan<byte> content, out IHDR ihdr)
+    internal static bool TryRead(ReadOnlySpan<byte> content, out IHDR ihdr)
     {
         ihdr = new();
-
         if (content.Length is not 13) {
             Logger.Warn("The content is not of the expected length.", Logger.Source.User);
             return false;
         }
 
-        ihdr.Width = BinaryPrimitives.ReadInt32BigEndian(content);
-        ihdr.Height = BinaryPrimitives.ReadInt32BigEndian(content.Slice(4));
-        ihdr.BitDepth = content[8];
-        ihdr.ColorType = (ColorType)content[9];
-        ihdr.Compression = content[10];
-        ihdr.Filter = content[11];
-        ihdr.Interlace = (Interlace)content[12];
+        ihdr = new()
+        {
+            Width = BinaryPrimitives.ReadInt32BigEndian(content),
+            Height = BinaryPrimitives.ReadInt32BigEndian(content[4..]),
+            BitDepth = content[8],
+            ColorType = (ColorType)content[9],
+            Compression = content[10],
+            Filter = content[11],
+            Interlace = (Interlace)content[12]
+        };
 
         ihdr.PixelType = ihdr.ColorType switch
         {
@@ -58,13 +58,13 @@ internal struct IHDR
             _ => PixelType.FromGrayscale(0)
         };
 
-        if (ihdr.PixelType.RequiredBytes is 0)
+        if (ihdr.PixelType.RequiredBytes == 0)
         {
             Logger.Warn("Something went wrong while reading the color type of the png.", Logger.Source.User);
             return false;
         }
 
-        if (BitOperations.PopCount(ihdr.BitDepth) is not 1) {
+        if (BitOperations.PopCount(ihdr.BitDepth) != 1) {
             Logger.Warn("Invalid bit depth.", Logger.Source.User);
             return false;
         }
@@ -81,12 +81,12 @@ internal struct IHDR
             return false;
         }
 
-        if (ihdr.Compression is not CompressionStandard) {
+        if (ihdr.Compression != CompressionStandard) {
             Logger.Warn("Unknown compression algorithm.", Logger.Source.User);
             return false;
         }
 
-        if (ihdr.Filter is not FilterStandard) {
+        if (ihdr.Filter != FilterStandard) {
             Logger.Warn("Unknown filtering algorithm.", Logger.Source.User);
             return false;
         }

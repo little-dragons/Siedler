@@ -1,11 +1,6 @@
-namespace Lini.Image.Png;
+namespace Lini.Stream;
 
-/// <summary>
-/// A read-only stream that reads its data from provided sections of <see cref="ReadOnlyMemory{byte}"/> which are concatenated.
-/// Because writing is therefore not sensical the appropriate methods will therefore throw a <see cref="NotSupportedException"/>.
-/// Seeking however is possible and using the <see cref="CutAfter"/> and <see cref="CutBefore"/> methods, slicing is possible.
-/// </summary>
-public class ChunkedMemoryReader : System.IO.Stream
+public class ChunkedMemoryStream : IReadSeekStream<byte, byte>
 {
     // General notes: When working with the stream, only modify the 4 non-inherited properties. The other properties
     // inherited from stream are just redirects to those we defined. Because of the chunked memory, we can only
@@ -46,20 +41,10 @@ public class ChunkedMemoryReader : System.IO.Stream
     /// </summary>
     private long CurrentBytePosition { get; set; }
 
+    public long Position => CurrentBytePosition;
+    public long Length => FullByteCount;
 
-
-    /// <summary>
-    /// The full size of the stream in bytes.
-    /// </summary>
-    public override long Length => FullByteCount;
-
-    /// <summary>
-    /// The number of read elements in bytes, but in count of <typeparamref name="T"/>.
-    /// </summary>
-    public override long Position { get => CurrentBytePosition; set => Seek(value, SeekOrigin.Begin); }
-
-
-    public ChunkedMemoryReader()
+    public ChunkedMemoryStream()
     {
         CurrentMemIndex = 0;
         CurrentMemPosition = 0;
@@ -68,18 +53,14 @@ public class ChunkedMemoryReader : System.IO.Stream
         MemoryList = new();
     }
 
-    public ChunkedMemoryReader(IEnumerable<ReadOnlyMemory<byte>> memories)
+    public ChunkedMemoryStream(IEnumerable<ReadOnlyMemory<byte>> memories)
         : this()
     {
         foreach (ReadOnlyMemory<byte> memory in memories)
-            AddMemory(memory);
+            Append(memory);
     }
 
-    /// <summary>
-    /// Adds a new chunk to the memory list at the end. Removing it can not be done easily, refer to the cut methods.
-    /// </summary>
-    /// <param name="memory">The memory which will be stored as long as this reader is active.</param>
-    public void AddMemory(ReadOnlyMemory<byte> memory)
+    public void Append(ReadOnlyMemory<byte> memory)
     {
         if (memory.Length == 0)
             return;
@@ -88,20 +69,9 @@ public class ChunkedMemoryReader : System.IO.Stream
         MemoryList.Add(memory);
     }
 
-    /// <summary>
-    /// Is true only if the stream still has data to read.
-    /// </summary>
-
-    // public override bool CanRead => CurrentBytePosition < FullByteCount;
-    public override bool CanRead => true;
 
 
-    /// <inheritdoc cref="Read(Span{byte})"/>
-    public override int Read(byte[] buffer, int offset, int count)
-        => Read(new(buffer, offset, count));
-
-    /// <inheritdoc cref="Read(Span{byte})"/>
-    public override int Read(Span<byte> bufferSpan)
+    public int Read(Span<byte> bufferSpan)
     {
         if (CurrentMemIndex >= MemoryList.Count)
             return 0;
@@ -148,46 +118,31 @@ public class ChunkedMemoryReader : System.IO.Stream
     }
 
 
-    public override bool CanSeek => true;
 
-    /// <summary>
-    /// Sets the cursor of the stream to a given byte value.
-    /// </summary>
-    /// <param name="offset">The offset in bytes from the origin. Can be negative</param>
-    /// <param name="origin">The origin of the stream.</param>
-    /// <returns>The new position of the cursor. The old position is returned if there was an error (or this location was requested).</returns>
-    public override long Seek(long offset, SeekOrigin origin)
+    public void SeekEnd(long value) {
+        if (value > 0 || value < -FullByteCount)
+            return;
+
+        Seek(FullByteCount - value);
+    }
+
+    public void SeekOffset(long value) {
+        if (value < CurrentBytePosition || value >= FullByteCount - CurrentBytePosition)
+            return;
+
+        Seek(CurrentBytePosition + value);
+    }
+
+    public void Seek(long aim)
     {
-        long aim = 0;
-        if (origin is SeekOrigin.Begin)
-        {
-            if (offset < 0 || offset > FullByteCount)
-                return CurrentBytePosition;
+        if (aim < 0 || aim > FullByteCount)
+            return;
 
-            aim = offset;
-        }
-        else if (origin is SeekOrigin.End)
-        {
-            if (offset > 0 || offset < -FullByteCount)
-                return CurrentBytePosition;
-
-            aim = FullByteCount - offset;
-        }
-        else
-        {
-            if (offset < CurrentBytePosition || offset >= FullByteCount - CurrentBytePosition)
-                return CurrentBytePosition;
-
-            aim = CurrentBytePosition + offset;
-        }
 
         // go back if there is still the possibility to go back.
         while (aim < CurrentBytePosition && !(CurrentMemIndex <= 0 && CurrentMemPosition <= 0))
         {
             // go back through current memory
-            ReadOnlyMemory<byte> current = MemoryList[CurrentMemIndex];
-
-
             // as far as is needed but not more than possible in this block
             int toGo = Math.Min(CurrentMemPosition, (int)(CurrentBytePosition - aim));
             CurrentMemPosition -= toGo;
@@ -220,7 +175,7 @@ public class ChunkedMemoryReader : System.IO.Stream
             }
         }
 
-        return CurrentBytePosition;
+        return;
     }
 
 
@@ -269,7 +224,7 @@ public class ChunkedMemoryReader : System.IO.Stream
 
         // slice current memory
         count += MemoryList[CurrentMemIndex].Length - CurrentMemPosition;
-        MemoryList[CurrentMemIndex] = MemoryList[CurrentMemIndex].Slice(0, CurrentMemPosition);
+        MemoryList[CurrentMemIndex] = MemoryList[CurrentMemIndex][..CurrentMemPosition];
 
 
         // adjust count
@@ -277,39 +232,4 @@ public class ChunkedMemoryReader : System.IO.Stream
 
         return count;
     }
-
-
-
-
-
-
-
-    // methods that need to be implemented for stream.
-    // it seems to be common practice to throw if this is a read-only stream.
-
-    /// <summary>
-    /// Since you can't write, flushing makes no sonse. Will throw.
-    /// </summary>
-    /// <exception cref="NotSupportedException"/>
-    public override void Flush() =>
-        throw new NotSupportedException();
-
-    /// <summary>
-    /// Cannot set a specific length. The length is inferred from the submitted memory blocks.
-    /// </summary>
-    /// <exception cref="NotSupportedException"/>
-    public override void SetLength(long value) =>
-        throw new NotSupportedException();
-
-    /// <summary>
-    /// Cannot write to a chunked memory reader. You are free to write to memory yourself and submit it to the chunk.
-    /// </summary>
-    /// <exception cref="NotSupportedException"/>
-    public override void Write(byte[] buffer, int offset, int count) =>
-        throw new NotSupportedException();
-
-    /// <summary>
-    /// Always is false. You can't write to a chunked memory reader.
-    /// </summary>
-    public override bool CanWrite => false;
 }
