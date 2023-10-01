@@ -119,20 +119,6 @@ public class ChunkedMemoryStream : IReadSeekStream<byte, byte>
 
 
 
-    public void SeekEnd(long value) {
-        if (value > 0 || value < -FullByteCount)
-            return;
-
-        Seek(FullByteCount - value);
-    }
-
-    public void SeekOffset(long value) {
-        if (value < CurrentBytePosition || value >= FullByteCount - CurrentBytePosition)
-            return;
-
-        Seek(CurrentBytePosition + value);
-    }
-
     public void Seek(long aim)
     {
         if (aim < 0 || aim > FullByteCount)

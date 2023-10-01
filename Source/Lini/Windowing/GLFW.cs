@@ -103,7 +103,7 @@ internal static class GLFW
     {
         Release = 0,
         Press = 1,
-        Repeate = 2,
+        Repeat = 2,
     }
 
     internal enum Key
@@ -269,6 +269,10 @@ internal static class GLFW
 
     [DllImport(LibName, EntryPoint = "glfwGetKey")]
     internal static extern KeyState GetKey(WindowRef window, Key key);
+
+    [DllImport(LibName, EntryPoint = "glfwGetMouseButton")]
+    internal static extern KeyState GetMouseButton(WindowRef window, Mouse button);
+
 
     [DllImport(LibName, EntryPoint = "glfwSetWindowMonitor")]
     internal static extern void SetWindowMonitor(WindowRef window, MonitorRef monitor, int xpos, int ypos, int width, int height, int refreshRate);

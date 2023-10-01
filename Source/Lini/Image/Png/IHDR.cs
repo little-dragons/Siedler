@@ -32,7 +32,8 @@ internal struct IHDR
     internal static bool TryRead(ReadOnlySpan<byte> content, out IHDR ihdr)
     {
         ihdr = new();
-        if (content.Length is not 13) {
+        if (content.Length is not 13)
+        {
             Logger.Warn("The content is not of the expected length.", Logger.Source.User);
             return false;
         }
@@ -64,7 +65,8 @@ internal struct IHDR
             return false;
         }
 
-        if (BitOperations.PopCount(ihdr.BitDepth) != 1) {
+        if (BitOperations.PopCount(ihdr.BitDepth) != 1)
+        {
             Logger.Warn("Invalid bit depth.", Logger.Source.User);
             return false;
         }
@@ -81,18 +83,27 @@ internal struct IHDR
             return false;
         }
 
-        if (ihdr.Compression != CompressionStandard) {
+        if (ihdr.Compression != CompressionStandard)
+        {
             Logger.Warn("Unknown compression algorithm.", Logger.Source.User);
             return false;
         }
 
-        if (ihdr.Filter != FilterStandard) {
+        if (ihdr.Filter != FilterStandard)
+        {
             Logger.Warn("Unknown filtering algorithm.", Logger.Source.User);
             return false;
         }
 
-        if (ihdr.Interlace is not Interlace.None or Interlace.Adam7) {
+        if (ihdr.Interlace is not Interlace.None or Interlace.Adam7)
+        {
             Logger.Warn("Unknown interlace algorithm.", Logger.Source.User);
+            return false;
+        }
+
+        if (ihdr.Interlace is Interlace.Adam7)
+        {
+            Logger.Warn("The Adam7 interlacing algorithm is not implemented.", Logger.Source.User);
             return false;
         }
 

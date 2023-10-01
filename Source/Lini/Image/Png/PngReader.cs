@@ -110,9 +110,9 @@ internal static class PngReader
         }
 
 
-        using UnfilteringStream unfilter = new(ihdr, result.Bytes);
-        ZlibReader idatReader = new(idatMemories);
-        ((IReadStream<byte>)idatReader).CopyTo(SystemStreamWrapper.WrapWrite(unfilter));
+        UnfilteringStream unfilter = new(ihdr.PixelType, ihdr.Width, new FixedMemoryStream<byte>(result.Bytes));
+        ZlibReadStream idatReader = new(idatMemories);
+        ((IReadStream<byte>)idatReader).CopyTo(unfilter);
 
 
         if (type is not "IEND")

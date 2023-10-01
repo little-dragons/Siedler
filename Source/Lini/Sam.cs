@@ -41,6 +41,7 @@ public static class Sam
         GLFW.WindowHint(GLFW.WindowHintType.OpenGLProfile, GLFW.WindowValue.OpenGLCoreProfile);
         GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMajor, (GLFW.WindowValue)4);
         GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, (GLFW.WindowValue)0);
+        GLFW.WindowHint(GLFW.WindowHintType.Samples, (GLFW.WindowValue)4);
 
         WindowRef = GLFW.CreateWindow(winInfo.Width, winInfo.Height, winInfo.Title, winInfo.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, 0);
         if (WindowRef.Raw == 0)
@@ -77,7 +78,7 @@ public static class Sam
 
             GL.DebugMessageCallback(callback);
             GL.DebugMessageInsert(DebugSource.Application, DebugType.Marker, 0, DebugSeverity.Notification, "Test message injected.");
-
+            GL.Enable(EnableCap.Multisample);
             GL.ClearColor(1.0f, 0.5f, 0.2f, 1.0f);
 
             SharedObjects.Initialize();
@@ -118,33 +119,59 @@ public static class Sam
         var time = DateTime.Now.Ticks;
 
         Rendering.GLBindings.Texture tex = null!;
-        RenderThread.Do(() => {
+        RenderThread.Do(() =>
+        {
             tex = new(Image.Png.PngReader.ReadFromBytes(File.ReadAllBytes(Resources.PathFor(Resources.Type.Texture, "pews.png")))!);
             tex.Bind();
-            SharedObjects.SimpleProgram.SetUniform("tex", 0);
+            SharedObjects.SimpleProgram.SetUniform("tex", TextureUnit._0);
         });
         RenderThread.Finish();
 
         Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
+        var speedX = 0.0f;
+        var speedZ = 0.0f;
+        var speedDelta = .001f;
+        long deltaTicks = 0;
+        Matrix4x4 lastProj = Matrix4x4.Identity;
+
         while (!GLFW.WindowShouldClose(WindowRef))
         {
-            RenderThread.Do(() =>
+            if (GLFW.GetKey(WindowRef, GLFW.Key.Up) == GLFW.KeyState.Press)
             {
-                SharedObjects.SimpleProgram.Bind();
-                SharedObjects.SimpleProgram.SetUniform("proj", Matrix4x4.CreateRotationZ(MathF.PI * ((DateTime.Now.Ticks - time) / 100000000f)));
-            });
+                speedX += speedDelta;
+            }
+            if (GLFW.GetKey(WindowRef, GLFW.Key.Down) == GLFW.KeyState.Press)
+            {
+                speedX -= speedDelta;
+            }
+            if (GLFW.GetKey(WindowRef, GLFW.Key.Left) == GLFW.KeyState.Press)
+            {
+                speedZ += speedDelta;
+            }
+            if (GLFW.GetKey(WindowRef, GLFW.Key.Right) == GLFW.KeyState.Press)
+            {
+                speedZ -= speedDelta;
+            }
+
+            if (GLFW.GetMouseButton(WindowRef, GLFW.Mouse.Right) == GLFW.KeyState.Press)
+            {
+                speedX = speedZ = 0f;
+            }
+            if (GLFW.GetMouseButton(WindowRef, GLFW.Mouse.Left) != GLFW.KeyState.Press)
+            {
+                RenderThread.Do(() =>
+                {
+                    SharedObjects.SimpleProgram.Bind();
+                    deltaTicks = DateTime.Now.Ticks - time;
+                    lastProj *= Matrix4x4.CreateRotationZ(deltaTicks / 5000000000f * speedZ) *
+                        Matrix4x4.CreateRotationX(deltaTicks / 5000000000f * speedX);
+                    SharedObjects.SimpleProgram.SetUniform("proj", lastProj);
+                });
+            }
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
 
-            // if (GLFW.GetKey(WindowRef, GLFW.Key.H) == GLFW.KeyState.Release)
-            // {
-            //     GLFW.SetWindowMonitor(WindowRef, GLFW.GetPrimaryMonitor(), 0, 0, 900, 900, 60);
-            // }
 
-            // if (GLFW.GetKey(WindowRef, GLFW.Key.H) == GLFW.KeyState.Press)
-            // {
-            //     GLFW.SetWindowMonitor(WindowRef, GLFW.MonitorRef.Null, 0, 0, 900, 900, 60);
-            // }
 
             mesh.Draw();
 

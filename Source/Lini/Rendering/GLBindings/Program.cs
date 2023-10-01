@@ -57,32 +57,40 @@ internal class Program
         GL.UseProgram(Handle.Value);
     }
 
+    /// <summary>
+    /// If this was unmanaged code, caching the uniform values is probably not required
+    /// since the <see cref="GL.GetUniformLocation(uint, string)"/> method is very fast anyway.
+    /// However, since marshalling would be required, I assume that caching is actually faster to avoid
+    /// the marshalling and P/Invoke overhead.
+    /// </summary>
+    private Dictionary<string, int> UniformLocations { get; init; } = new();
 
-    private readonly Dictionary<string, int> UniformLocations = new();
-    public void SetUniform<T>(string name, T value) where T : unmanaged
+    public int GetLocation(string name)
     {
-        WarnIfInvalid();
         if (!UniformLocations.TryGetValue(name, out int loc))
         {
             loc = GL.GetUniformLocation(Handle.Value, name);
             UniformLocations.Add(name, loc);
         }
 
-        if (value is float v1)
-            GL.Uniform(loc, v1);
-        if (value is int i)
-            GL.Uniform(loc, i);
-        else if (value is Vector2 v2)
-            GL.Uniform(loc, v2);
-        else if (value is Vector3 v3)
-            GL.Uniform(loc, v3);
-        else if (value is Vector4 v4)
-            GL.Uniform(loc, v4);
-        else if (value is Matrix4x4 mat4)
-            GL.Uniform(loc, mat4);
-        else
-            Logger.Warn($"Could not set uniform of type {typeof(T)}.", Logger.Source.GL);
+        return loc;
     }
+
+    public void SetUniform(string name, float value)
+        => GL.Uniform(GetLocation(name), value);
+    public void SetUniform(string name, int value)
+        => GL.Uniform(GetLocation(name), value);
+    public void SetUniform(string name, Vector2 value)
+        => GL.Uniform(GetLocation(name), value);
+    public void SetUniform(string name, Vector3 value)
+        => GL.Uniform(GetLocation(name), value);
+    public void SetUniform(string name, Vector4 value)
+        => GL.Uniform(GetLocation(name), value);
+    public void SetUniform(string name, TextureUnit value)
+        => GL.Uniform(GetLocation(name), (int)((uint)value - (uint)TextureUnit._0));
+    public void SetUniform(string name, Matrix4x4 value)
+        => GL.Uniform(GetLocation(name), value);
+
 
     private void WarnIfInvalid()
     {

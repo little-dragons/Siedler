@@ -1,8 +1,9 @@
 using Lini.Miscellaneous;
+using Lini.Stream;
 
 namespace Lini.Image.Png;
 
-internal class UnfilteringStream : System.IO.MemoryStream
+internal class UnfilteringStream : IWriteStream<byte>
 {
     /// <summary>
     /// A position of -1 means that the filter method byte has not been read.
@@ -39,18 +40,20 @@ internal class UnfilteringStream : System.IO.MemoryStream
     /// </summary>
     private int PixelByteOffset { get; set; }
 
+    private IWriteStream<byte> Target { get; init; }
 
 
-    internal UnfilteringStream(IHDR ihdr, byte[] target)
-        : base(target)
+
+    internal UnfilteringStream(PixelType pixelType, int entriesPerLine, IWriteStream<byte> target)
     {
-        ByteCountScanline = (int)Math.Ceiling(ihdr.Width * ihdr.PixelType.RequiredBits / 8f);
+        Target = target;
+        ByteCountScanline = (int)Math.Ceiling(entriesPerLine * pixelType.RequiredBits / 8f);
         LastLineArr = new byte[ByteCountScanline];
         CurrentLineArr = new byte[ByteCountScanline];
         CurrentPosInLine = -1;
         CurrentLineCount = 0;
         CurrentFilterMethod = byte.MaxValue;
-        PixelByteOffset = ihdr.PixelType.RequiredBytes;
+        PixelByteOffset = pixelType.RequiredBytes;
     }
 
     /// <summary>
@@ -68,7 +71,7 @@ internal class UnfilteringStream : System.IO.MemoryStream
         else return c;
     }
 
-    public override void Write(ReadOnlySpan<byte> work)
+    public void Write(ReadOnlySpan<byte> work)
     {
         // keeps track of where we are in the span
         int workPosition = 0;
@@ -177,7 +180,7 @@ internal class UnfilteringStream : System.IO.MemoryStream
                     while (CurrentPosInLine < PixelByteOffset)
                     {
                         // Paeth is 0 if no surruonding pixels
-                        CurrentSpan[CurrentPosInLine] = (byte)(work[workPosition]);
+                        CurrentSpan[CurrentPosInLine] = work[workPosition];
                         workPosition++;
                         CurrentPosInLine++;
                         toDoInThisLine--;
@@ -224,24 +227,15 @@ internal class UnfilteringStream : System.IO.MemoryStream
                 // thus, no array needs to be cleared. CurrentLineArr contains junk after this
                 // but as long as the rest of the algorithm works correctly and doesn't forward access
                 // the array, it's fine.
-                byte[] temp = LastLineArr;
-                LastLineArr = CurrentLineArr;
-                CurrentLineArr = temp;
+                (CurrentLineArr, LastLineArr) = (LastLineArr, CurrentLineArr);
                 Span<byte> tempSpan = LastSpan;
                 LastSpan = CurrentSpan;
                 CurrentSpan = tempSpan;
-                
+
                 CurrentPosInLine = -1;
                 CurrentLineCount++;
-                base.Write(LastLineArr, 0, ByteCountScanline);
+                Target.Write(new Span<byte>(LastLineArr));
             }
         }
     }
-
-    /// <inheritdoc/>
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        Write(new(buffer, offset, count));
-    }
-
 }
