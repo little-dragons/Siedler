@@ -1,4 +1,4 @@
-namespace Lini.Image.Png;
+namespace Lini.Image.PNG;
 
 internal enum Interlace : byte
 {

@@ -4,12 +4,12 @@ using System.Text;
 using Lini.Miscellaneous;
 using Lini.Stream;
 
-namespace Lini.Image.Png;
+namespace Lini.Image.PNG;
 
 /// <summary>
 /// implemented after https://en.wikipedia.org/wiki/Portable_Network_Graphics#File_format and https://www.w3.org/TR/png/
 /// </summary>
-internal static class PngReader
+internal static class PNGReader
 {
     private static readonly byte[] SignatureStart = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
@@ -35,7 +35,7 @@ internal static class PngReader
 
 
 
-    internal static Image? ReadFromBytes(ReadOnlyMemory<byte> bytes)
+    internal static ImageData? ReadFromBytes(ReadOnlyMemory<byte> bytes)
     {
 
         // match signature
@@ -56,7 +56,7 @@ internal static class PngReader
         }
 
 
-        Image result = new()
+        ImageData result = new()
         {
             Width = ihdr.Width,
             Height = ihdr.Height,

@@ -1,7 +1,7 @@
 using Lini.Miscellaneous;
 using Lini.Stream;
 
-namespace Lini.Image.Png;
+namespace Lini.Image.PNG;
 
 internal class UnfilteringStream : IWriteStream<byte>
 {

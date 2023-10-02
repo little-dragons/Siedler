@@ -209,6 +209,17 @@ internal static partial class GL
         ActiveTextureInstance(unit);
     }
 
+
+    /// <summary>
+    /// The value of <paramref name="unit"/> is used as the texture unit, it does not have to follow OpenGL
+    /// values. This should make the api simpler to use.
+    /// </summary>
+    /// <param name="unit">The value of the texture unit starting at the value 0. It is internally converted to a valid texture uint
+    internal static void ActiveTexture(int unit)
+    {
+        ActiveTextureInstance((TextureUnit)(unit + (uint)TextureUnit.Texture0));
+    }
+
     internal static void GenerateMipmap(TextureTarget target)
     {
         GenerateMipmapInstance(target);

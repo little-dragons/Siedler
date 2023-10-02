@@ -3,7 +3,7 @@ namespace Lini.Image;
 /// <summary>
 /// Stores the required bits for each component.
 /// </summary>
-public readonly struct PixelType
+public readonly record struct PixelType
 {
     public PixelType(int red, int green, int blue, int alpha, int gray)
     {

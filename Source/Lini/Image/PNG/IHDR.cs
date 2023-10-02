@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Numerics;
 using Lini.Miscellaneous;
 
-namespace Lini.Image.Png;
+namespace Lini.Image.PNG;
 
 internal struct IHDR
 {
@@ -31,10 +31,10 @@ internal struct IHDR
     /// <returns>True if the chunk could be read successfully.</returns>
     internal static bool TryRead(ReadOnlySpan<byte> content, out IHDR ihdr)
     {
-        ihdr = new();
         if (content.Length is not 13)
         {
             Logger.Warn("The content is not of the expected length.", Logger.Source.User);
+            ihdr = new();
             return false;
         }
 
@@ -53,12 +53,17 @@ internal struct IHDR
         {
             ColorType.Grayscale => PixelType.FromGrayscale(ihdr.BitDepth),
             ColorType.Truecolor => PixelType.FromRGB(ihdr.BitDepth),
-            ColorType.Indexed => PixelType.FromGrayscale(0), // indexed color not implemented
+
+            // indexed color not implemented
+            // this sets the bits length to zero, producing an error later
+            ColorType.Indexed => PixelType.FromGrayscale(0), 
             ColorType.GrayscaleAlpha => PixelType.FromTransparentGrayscale(ihdr.BitDepth, ihdr.BitDepth),
             ColorType.TruecolorAlpha => PixelType.FromTransparentRGB(ihdr.BitDepth, ihdr.BitDepth, ihdr.BitDepth, ihdr.BitDepth),
             _ => PixelType.FromGrayscale(0)
         };
 
+        // this is required for producing an error in the above switch
+        // statement.
         if (ihdr.PixelType.RequiredBytes == 0)
         {
             Logger.Warn("Something went wrong while reading the color type of the png.", Logger.Source.User);

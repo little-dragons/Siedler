@@ -86,8 +86,16 @@ internal class Program
         => GL.Uniform(GetLocation(name), value);
     public void SetUniform(string name, Vector4 value)
         => GL.Uniform(GetLocation(name), value);
+
+    /// <summary>
+    /// This is an overload not really specified by OpenGL, it exists to make life simpler. Usually, 
+    /// OpenGL requires a value starting at 0 to specify texture units.
+    /// </summary>
+    /// <param name="name">The name of the sampler in the shader.</param>
+    /// <param name="value">The texture unit to use. It is internally converted to a valid OpenGL value.</param>
     public void SetUniform(string name, TextureUnit value)
-        => GL.Uniform(GetLocation(name), (int)((uint)value - (uint)TextureUnit._0));
+        => GL.Uniform(GetLocation(name), (int)((uint)value - (uint)TextureUnit.Texture0));
+        
     public void SetUniform(string name, Matrix4x4 value)
         => GL.Uniform(GetLocation(name), value);
 

@@ -10,13 +10,10 @@ namespace Lini.Stream;
 public class FixedMemoryStream<T> : IReadWriteSeekStream<T, T, T>
 {
     private Memory<T> Store { get; init; }
+    
     public FixedMemoryStream(Memory<T> memory)
     {
         Store = memory;
-    }
-    public FixedMemoryStream(T[] array)
-    {
-        Store = new Memory<T>(array);
     }
 
     public long Length => Store.Length;

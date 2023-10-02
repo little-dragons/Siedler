@@ -1,5 +1,5 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
+using Lini.Image;
 using Lini.Miscellaneous;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
@@ -121,9 +121,11 @@ public static class Sam
         Rendering.GLBindings.Texture tex = null!;
         RenderThread.Do(() =>
         {
-            tex = new(Image.Png.PngReader.ReadFromBytes(File.ReadAllBytes(Resources.PathFor(Resources.Type.Texture, "pews.png")))!);
+            tex = new(ImageData.FromFile("/mnt/c/Users/Samuel/Pictures/Eigene Kreationen/Freundbuch.png")!);
+
+            GL.ActiveTexture(0);
             tex.Bind();
-            SharedObjects.SimpleProgram.SetUniform("tex", TextureUnit._0);
+            SharedObjects.SimpleProgram.SetUniform("tex", 0);
         });
         RenderThread.Finish();
 
@@ -169,9 +171,8 @@ public static class Sam
                     SharedObjects.SimpleProgram.SetUniform("proj", lastProj);
                 });
             }
+
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
-
-
 
             mesh.Draw();
 
