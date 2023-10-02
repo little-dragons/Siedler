@@ -4,9 +4,6 @@ namespace Lini.Rendering;
 
 public class Mesh
 {
-    public Material? Material { get; private set; }
-    public Texture? Texture { get; private set; }
-
     public Vertex[] Vertices { get; private set; }
     public Span<Vertex> VerticesSpan => new(Vertices);
     public uint[] Indices { get; private set; }
@@ -40,10 +37,7 @@ public class Mesh
 
     internal void Draw()
     {
-        RenderThread.Do(() =>
-        {
-            GL.BindVertexArray(VertexArray);
-            GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.Int, 0);
-        });
+        GL.BindVertexArray(VertexArray);
+        GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.Int, 0);
     }
 }

@@ -1,4 +1,4 @@
-namespace Lini.Scene;
+namespace Lini.Graph;
 
 public abstract class Component
 {
@@ -24,11 +24,6 @@ public abstract class Component
 
     }
     public virtual void LateUpdate(UpdateArgs _)
-    {
-
-    }
-
-    public virtual void Render(RenderArgs _)
     {
 
     }

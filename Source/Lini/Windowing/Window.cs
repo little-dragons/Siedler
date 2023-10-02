@@ -4,8 +4,8 @@ namespace Lini.Windowing;
 
 public class Window
 {
-    private Vector2 LastWindowSize;
-    private Vector2 LastWindowPos;
+    // private Vector2 LastWindowSize;
+    // private Vector2 LastWindowPos;
 
     private GLFW.WindowRef Ref { get; init; }
 

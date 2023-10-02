@@ -3,6 +3,7 @@ using Lini.Image;
 using Lini.Miscellaneous;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
+using Lini.Graph;
 using Lini.Windowing;
 
 namespace Lini;
@@ -111,70 +112,70 @@ public static class Sam
         Logger.Info("Exiting Lini engine. Goodbye.", Logger.Source.MainThread);
     }
 
-    public static void Run(Mesh mesh)
+    public static void Run(Scene scene)
     {
         if (!IsInitialized)
             return;
 
         var time = DateTime.Now.Ticks;
 
-        Rendering.GLBindings.Texture tex = null!;
-        RenderThread.Do(() =>
-        {
-            tex = new(ImageData.FromFile("/mnt/c/Users/Samuel/Pictures/Eigene Kreationen/Freundbuch.png")!);
+        // Rendering.GLBindings.Texture tex = null!;
+        // RenderThread.Do(() =>
+        // {
+        //     tex = new(ImageData.FromFile("/mnt/c/Users/Samuel/Pictures/Eigene Kreationen/Freundbuch.png")!);
 
-            GL.ActiveTexture(0);
-            tex.Bind();
-            SharedObjects.SimpleProgram.SetUniform("tex", 0);
-        });
-        RenderThread.Finish();
+        //     GL.ActiveTexture(0);
+        //     tex.Bind();
+        //     SharedObjects.SimpleProgram.SetUniform("tex", 0);
+        // });
+        // RenderThread.Finish();
 
         Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
-        var speedX = 0.0f;
-        var speedZ = 0.0f;
-        var speedDelta = .001f;
-        long deltaTicks = 0;
-        Matrix4x4 lastProj = Matrix4x4.Identity;
+        // var speedX = 0.0f;
+        // var speedZ = 0.0f;
+        // var speedDelta = .001f;
+        // long deltaTicks = 0;
+        // Matrix4x4 lastProj = Matrix4x4.Identity;
 
         while (!GLFW.WindowShouldClose(WindowRef))
         {
-            if (GLFW.GetKey(WindowRef, GLFW.Key.Up) == GLFW.KeyState.Press)
-            {
-                speedX += speedDelta;
-            }
-            if (GLFW.GetKey(WindowRef, GLFW.Key.Down) == GLFW.KeyState.Press)
-            {
-                speedX -= speedDelta;
-            }
-            if (GLFW.GetKey(WindowRef, GLFW.Key.Left) == GLFW.KeyState.Press)
-            {
-                speedZ += speedDelta;
-            }
-            if (GLFW.GetKey(WindowRef, GLFW.Key.Right) == GLFW.KeyState.Press)
-            {
-                speedZ -= speedDelta;
-            }
+            // if (GLFW.GetKey(WindowRef, GLFW.Key.Up) == GLFW.KeyState.Press)
+            // {
+            //     speedX += speedDelta;
+            // }
+            // if (GLFW.GetKey(WindowRef, GLFW.Key.Down) == GLFW.KeyState.Press)
+            // {
+            //     speedX -= speedDelta;
+            // }
+            // if (GLFW.GetKey(WindowRef, GLFW.Key.Left) == GLFW.KeyState.Press)
+            // {
+            //     speedZ += speedDelta;
+            // }
+            // if (GLFW.GetKey(WindowRef, GLFW.Key.Right) == GLFW.KeyState.Press)
+            // {
+            //     speedZ -= speedDelta;
+            // }
 
-            if (GLFW.GetMouseButton(WindowRef, GLFW.Mouse.Right) == GLFW.KeyState.Press)
-            {
-                speedX = speedZ = 0f;
-            }
-            if (GLFW.GetMouseButton(WindowRef, GLFW.Mouse.Left) != GLFW.KeyState.Press)
-            {
-                RenderThread.Do(() =>
-                {
-                    SharedObjects.SimpleProgram.Bind();
-                    deltaTicks = DateTime.Now.Ticks - time;
-                    lastProj *= Matrix4x4.CreateRotationZ(deltaTicks / 5000000000f * speedZ) *
-                        Matrix4x4.CreateRotationX(deltaTicks / 5000000000f * speedX);
-                    SharedObjects.SimpleProgram.SetUniform("proj", lastProj);
-                });
-            }
+            // if (GLFW.GetMouseButton(WindowRef, GLFW.Mouse.Right) == GLFW.KeyState.Press)
+            // {
+            //     speedX = speedZ = 0f;
+            // }
+            // if (GLFW.GetMouseButton(WindowRef, GLFW.Mouse.Left) != GLFW.KeyState.Press)
+            // {
+            //     RenderThread.Do(() =>
+            //     {
+            //         SharedObjects.SimpleProgram.Bind();
+            //         deltaTicks = DateTime.Now.Ticks - time;
+            //         lastProj *= Matrix4x4.CreateRotationZ(deltaTicks / 5000000000f * speedZ) *
+            //             Matrix4x4.CreateRotationX(deltaTicks / 5000000000f * speedX);
+            //         SharedObjects.SimpleProgram.SetUniform("proj", lastProj);
+            //     });
+            // }
 
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
 
-            mesh.Draw();
+            RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));
 
             RenderThread.Finish();
 

@@ -4,7 +4,7 @@ using Lini.Miscellaneous;
 
 namespace Lini.Rendering.GLBindings;
 
-internal class Texture
+public class Texture
 {
     private sealed class TextureHandle : CriticalHandle
     {
@@ -52,13 +52,13 @@ internal class Texture
         });
     }
 
-    public void Bind()
+    internal void Bind()
     {
         WarnIfInvalid();
         GL.BindTexture(TextureTarget.Texture2d, Handle.Value);
     }
 
-    public void Delete()
+    internal void Delete()
     {
         WarnIfInvalid();
         Handle.Close();

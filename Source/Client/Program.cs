@@ -1,5 +1,11 @@
-﻿using Lini;
+﻿using System.Numerics;
+using Lini;
+using Lini.Graph;
+using Lini.Graph.Components;
+using Lini.Image;
+using Lini.Miscellaneous;
 using Lini.Rendering;
+using Lini.Rendering.GLBindings;
 using Lini.Windowing;
 
 Run();
@@ -29,8 +35,36 @@ static void Run()
         new uint[] { 0, 1, 2, 1, 2, 3 };
 
     Mesh mesh = new(vertices, indices);
+    Texture text = new(ImageData.FromFile(Resources.PathFor(Resources.Type.Texture, "pews.png"))!);
 
-    Sam.Run(mesh);
+    MeshRenderer renderer = new(mesh, text);
+
+    Entity meshEntity = new();
+    meshEntity.SetComponent(renderer);
+
+    Entity camEntity = new();
+    camEntity.Transform.Position.Z = -3f;
+    camEntity.Transform.Position.Y = 1f;
+
+    Camera cam = new()
+    {
+        FieldOfView = MathF.PI / 1.9f,
+        NearPlane = 0.1f,
+        FarPlane = 100f,
+        AspectRatio = 1,
+    };
+    camEntity.SetComponent(cam);
+
+    Entity root = new();
+    root.AddChild(meshEntity);
+    root.AddChild(camEntity);
+
+    Scene scene = new() {
+        Root = root,
+        ActiveCamera = cam,
+    };
+
+    Sam.Run(scene);
 
     Sam.Terminate();
 }

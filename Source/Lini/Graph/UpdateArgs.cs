@@ -1,4 +1,4 @@
-namespace Lini.Scene;
+namespace Lini.Graph;
 
 public class UpdateArgs
 {
