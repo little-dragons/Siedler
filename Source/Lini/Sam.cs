@@ -1,5 +1,3 @@
-using System.Numerics;
-using Lini.Image;
 using Lini.Miscellaneous;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
@@ -40,9 +38,9 @@ public static class Sam
 
         GLFW.WindowHint(GLFW.WindowHintType.ClientApi, GLFW.WindowValue.OpenGLAPI);
         GLFW.WindowHint(GLFW.WindowHintType.OpenGLProfile, GLFW.WindowValue.OpenGLCoreProfile);
-        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMajor, (GLFW.WindowValue)4);
-        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, (GLFW.WindowValue)0);
-        GLFW.WindowHint(GLFW.WindowHintType.Samples, (GLFW.WindowValue)4);
+        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMajor, 4);
+        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, 0);
+        GLFW.WindowHint(GLFW.WindowHintType.Samples, 4);
 
         WindowRef = GLFW.CreateWindow(winInfo.Width, winInfo.Height, winInfo.Title, winInfo.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, 0);
         if (WindowRef.Raw == 0)

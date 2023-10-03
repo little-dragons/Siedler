@@ -258,6 +258,9 @@ internal static class GLFW
     [DllImport(LibName, EntryPoint = "glfwWindowHint")]
     internal static extern void WindowHint(WindowHintType hint, WindowValue value);
 
+    [DllImport(LibName, EntryPoint = "glfwWindowHint")]
+    internal static extern void WindowHint(WindowHintType hint, int value);
+
     [DllImport(LibName, EntryPoint = "glfwSwapBuffers")]
     internal static extern void SwapBuffers(WindowRef window);
 
