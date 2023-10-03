@@ -11,6 +11,9 @@
             "env": {
                 "LINI_RESOURCE_DIR": "${workspaceFolder}/Resources"
             },
+            "logging": {
+                "moduleLoad": false
+            },
             "cwd": "${workspaceFolder}/Source/Client",
             "console": "internalConsole",
             "stopAtEntry": false
