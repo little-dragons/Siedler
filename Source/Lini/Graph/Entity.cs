@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace Lini.Graph;
 
-public class Entity : IRenderable
+public struct Entity : IRenderable
 {
     private List<Component> Components { get; init; } = new();
     private List<IRenderable> Renderables { get; init; } = new();
