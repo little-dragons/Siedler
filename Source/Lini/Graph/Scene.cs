@@ -1,27 +1,42 @@
 using Lini.Graph.Components;
+using Lini.Graph.Components.BuiltIn;
 
 namespace Lini.Graph;
 
 public class Scene
 {
-    public Camera ActiveCamera { get; set; } = new();
-    public Entity Root { get; init; } = new();
+    public ComponentRef<Camera> ActiveCamera { get; set; }
+    public Entity Root { get; init; }
 
-    private ComponentList ComponentList { get; init; }
+    internal ComponentsPool Components { get; init; }
 
-    public ComponentRef MakeComponent<T>() where T : unmanaged, IComponent
-        => ComponentList.Make<T>();
 
-    public bool TryGetComponent<T>(ComponentRef key, out T component) where T : unmanaged, IComponent
+    public Scene()
     {
+        Root = new(this);
+        Components = new();
+    }
 
+    internal Entity NewEntity() 
+        => new(this);
+    
+    // internal ComponentRef<T> NewComponent<T>() where T : struct, IComponent
+    //     => Components.Add<T>();
+
+    // internal void DeleteComponent<T>(ComponentRef<T> comp) where T : struct, IComponent 
+    //     => Components.Delete(comp);
+
+
+    internal void UpdateAll(UpdateArgs args)
+    {
+        Components.Update(args);
     }
 
     internal void Render(RenderArgs args)
     {
-        args.Program.SetUniform("view", ActiveCamera.ViewMatrix);
-        args.Program.SetUniform("projection", ActiveCamera.ProjectionMatrix);
+        args.Program.SetUniform("view", Components.Get(ActiveCamera).ViewMatrix);
+        args.Program.SetUniform("projection", Components.Get(ActiveCamera).ProjectionMatrix);
 
-        ((IRenderable)Root).Render(args);
+        Root.Render(args);
     }
 }

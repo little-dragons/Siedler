@@ -1,14 +1,24 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using Lini.Graph.Components;
 
 namespace Lini.Graph;
 
-public struct Entity : IRenderable
+public sealed class Entity
 {
-    private List<Component> Components { get; init; } = new();
+    private ComponentList Components { get; init; } = new();
     private List<IRenderable> Renderables { get; init; } = new();
 
-    private List<Entity> Children { get; init; } = new();
-    private Entity? Parent { get; set; }
+    public List<Entity> Children { get; init; } = new();
+    public Entity Parent { get; private set; }
+
+    private Scene Scene { get; init; }
+
+    internal Entity(Scene scene)
+    {
+        Scene = scene;
+        Parent = null!;
+    }
 
     public Transform Transform = new();
 
@@ -16,8 +26,10 @@ public struct Entity : IRenderable
     /// This is a very slow method, because it needs to traverse the entire graph
     /// and thus should be used with care.
     /// </summary>
-    public Matrix4x4 AbsoluteTransform {
-        get {
+    public Matrix4x4 AbsoluteTransform
+    {
+        get
+        {
             if (Parent is null)
                 return Transform.Matrix;
             else
@@ -27,113 +39,96 @@ public struct Entity : IRenderable
 
     public bool Enabled { get; set; } = true;
 
-    public void AddChild(Entity entity)
+    public Entity MakeChild()
     {
-        entity.Parent = this;
-        Children.Add(entity);
+        Entity e = Scene.NewEntity();
+        e.Parent = this;
+        Children.Add(e);
+        return e;
     }
 
-    public void RemoveChild(Entity entity)
+    public void Delete()
     {
-        Children.Remove(entity);
-    }
-
-    public void SetComponent<T>(T component) where T : Component
-    {
-        component.RegisterFor(this);
-
-        bool hasReplaced = false;
-        for (int i = 0; i < Components.Count && !hasReplaced; i++)
+        if (Parent.Children.Remove(this))
         {
-            if (Components[i] is T)
-            {
-                Components[i].Deregister();
-                Components[i] = component;
-                hasReplaced = true;
-            }
-        }
+            Parent = null!;
+            foreach (var child in Children)
+                child.Delete();
 
-        if (!hasReplaced)
-            Components.Add(component);
-
-
-        if (component is IRenderable renderable)
-        {
-            hasReplaced = false;
-            for (int i = 0; i < Renderables.Count && !hasReplaced; i++)
-            {
-                if (Renderables[i] is T)
-                {
-                    Renderables[i] = renderable;
-                    hasReplaced = true;
-                }
-            }
-
-            if (!hasReplaced)
-                Renderables.Add(renderable);
+            foreach (var component in Components.AsSpan())
+                Scene.Components.Delete(component);
         }
     }
 
-    public void RemoveComponent<T>() where T : Component
+
+    public ref T TryAdd<T>(in T item, out bool success, out ComponentRef<T> compRef) where T : struct, IComponent
     {
-        for (int i = 0; i < Components.Count; i++)
+        ref T comp = ref Scene.Components.New(in item, out compRef);
+        if (!Components.TryAdd(compRef.Plain))
         {
-            if (Components[i] is T)
-            {
-                Components[i].Deregister();
-
-                if (Components[i] is IRenderable r)
-                    Renderables.Remove(r);
-
-                Components.RemoveAt(i);
-                return;
-            }
-        }
-    }
-
-    public T? GetComponent<T>() where T : Component
-    {
-        foreach (var comp in Components)
-        {
-            if (comp is T)
-                return comp as T;
+            Scene.Components.Delete(compRef);
+            success = false;
+            return ref Unsafe.NullRef<T>();
         }
 
-        return null;
+        comp.Entity = this;
+
+
+        if (comp is IRenderable ren)
+            Renderables.Add(ren);
+
+        success = true;
+        return ref comp;
     }
 
-    public void EarlyUpdate(UpdateArgs args)
+    public ref T TryAdd<T>(out bool success, out ComponentRef<T> compRef) where T : struct, IComponent
     {
-        if (!Enabled)
-            return;
+        ref T comp = ref Scene.Components.New(out compRef);
+        if (!Components.TryAdd(compRef.Plain))
+        {
+            Scene.Components.Delete(compRef);
+            success = false;
+            return ref Unsafe.NullRef<T>();
+        }
 
-        foreach (var child in Children)
-            child.EarlyUpdate(args);
-        foreach (var comp in Components)
-            comp.EarlyUpdate(args);
+        comp.Entity = this;
+
+
+        if (comp is IRenderable ren)
+            Renderables.Add(ren);
+
+        success = true;
+        return ref comp;
     }
-    public void Update(UpdateArgs args)
+
+    public ref T TryAdd<T>(out bool success) where T : struct, IComponent
+        => ref TryAdd<T>(out success, out var _);
+
+
+
+    public ref T Add<T>(out ComponentRef<T> comp) where T : struct, IComponent
+        => ref TryAdd(out bool _, out comp);
+
+    public ref T Add<T>() where T : struct, IComponent
+        => ref TryAdd<T>(out bool _, out var _);
+
+
+    public ref T Add<T>(in T item, out ComponentRef<T> comp) where T : struct, IComponent
+        => ref TryAdd(in item, out bool _, out comp);
+
+    public ref T Add<T>(in T item) where T : struct, IComponent
+        => ref TryAdd<T>(in item, out bool _, out var _);
+
+
+    public void Remove<T>(ComponentRef<T> comp) where T : struct, IComponent
     {
-        if (!Enabled)
-            return;
+        if (comp is IRenderable ren)
+            Renderables.Remove(ren);
 
-        foreach (var child in Children)
-            child.Update(args);
-        foreach (var comp in Components)
-            comp.Update(args);
+        Components.Free(comp.Plain);
     }
-    public void LateUpdate(UpdateArgs args)
-    {
-        if (!Enabled)
-            return;
 
-        foreach (var child in Children)
-            child.LateUpdate(args);
-        foreach (var comp in Components)
-            comp.LateUpdate(args);
-    }
-    
-    void IRenderable.Render(RenderArgs args)
+    internal void Render(RenderArgs args)
     {
         if (!Enabled)
             return;
@@ -142,7 +137,7 @@ public struct Entity : IRenderable
         args.Transforms.Push(entityToWorld);
 
         foreach (var child in Children)
-            ((IRenderable)child).Render(args);
+            child.Render(args);
 
         foreach (var comp in Renderables)
             comp.Render(args);
