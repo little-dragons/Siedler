@@ -49,8 +49,7 @@ internal static partial class ComponentReflection
                     var normal = info.GetMethod(nameof(IComponent.Update), BindingFlags.Instance | BindingFlags.Public)!;
                     var late = info.GetMethod(nameof(IComponent.LateUpdate), BindingFlags.Instance | BindingFlags.Public)!;
 
-                    var actionType = (Type)typeof(LayeredValuePool<>).GetMember(nameof(LayeredValuePool<int>.NonInvasiveAction))[0];
-                    actionType = actionType.MakeGenericType(info.AsType());
+                    var actionType = typeof(RefAction<>).MakeGenericType(info.AsType());
 
                     if (normal is not null)
                     {
