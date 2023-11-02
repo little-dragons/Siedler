@@ -1,7 +1,7 @@
-﻿using System.Numerics;
+﻿using Client;
 using Lini;
 using Lini.Graph;
-using Lini.Graph.Components;
+using Lini.Graph.Components.BuiltIn;
 using Lini.Image;
 using Lini.Miscellaneous;
 using Lini.Rendering;
@@ -10,6 +10,7 @@ using Lini.Windowing;
 
 Run();
 // Run();
+
 
 
 static void Run()
@@ -37,33 +38,28 @@ static void Run()
     Mesh mesh = new(vertices, indices);
     Texture text = new(ImageData.FromFile(Resources.PathFor(Resources.Type.Texture, "pews.png"))!);
 
-    MeshRenderer renderer = new(mesh, text);
 
-    Entity meshEntity = new();
-    meshEntity.SetComponent(renderer);
+    Scene scene = new();
+    Entity meshEntity = scene.Root.MakeChild();
+    ref var renderer = ref meshEntity.Add<MeshRenderer>(new(mesh, text));
 
-    Entity camEntity = new();
+    Entity camEntity = scene.Root.MakeChild();
     camEntity.Transform.Position.Z = -3f;
     camEntity.Transform.Position.Y = 1f;
 
-    Camera cam = new()
+    ref var cam = ref camEntity.Add<Camera>(new()
     {
         FieldOfView = MathF.PI / 1.9f,
         NearPlane = 0.1f,
         FarPlane = 100f,
         AspectRatio = 1,
-    };
-    camEntity.SetComponent(cam);
+    }, out var cameraRef);
 
-    Entity root = new();
-    root.AddChild(meshEntity);
-    root.AddChild(camEntity);
+    camEntity.Add<CameraMover>();
 
-    Scene scene = new()
-    {
-        Root = root,
-        ActiveCamera = cam,
-    };
+    scene.ActiveCamera = cameraRef;
+
+
 
     Sam.Run(scene);
 

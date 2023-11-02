@@ -1,12 +1,15 @@
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
 
-namespace Lini.Graph.Components;
+namespace Lini.Graph.Components.BuiltIn;
 
-public class MeshRenderer : Component, IRenderable
+public struct MeshRenderer : IComponent, IRenderable
 {
     public Mesh Mesh { get; private set; }
     public Texture? Texture { get; private set; }
+
+    static int IComponent.TypeID { get; set; }
+    public Entity Entity { get; set; } = default!;
 
     public MeshRenderer(Mesh mesh)
     {
@@ -19,7 +22,7 @@ public class MeshRenderer : Component, IRenderable
         Texture = texture;
     }
 
-    void IRenderable.Render(RenderArgs args)
+    readonly void IRenderable.Render(RenderArgs args)
     {
         args.Program.SetUniform("model", args.Transforms.Peek());
 

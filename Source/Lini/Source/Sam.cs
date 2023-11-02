@@ -3,6 +3,7 @@ using Lini.Rendering;
 using Lini.Rendering.GLBindings;
 using Lini.Graph;
 using Lini.Windowing;
+using Lini.Graph.Components;
 
 namespace Lini;
 
@@ -20,6 +21,7 @@ public static class Sam
         Logger.Info($"Initializing Lini engine {Version}. Hi!", Logger.Source.MainThread);
 
         Resources.Initialize();
+        ComponentReflection.Initialize(AppDomain.CurrentDomain.GetAssemblies());
 
 
         Logger.Info($"Using version {GLFW.GetVersion()}.", Logger.Source.GLFW);
@@ -123,6 +125,10 @@ public static class Sam
         while (!GLFW.WindowShouldClose(WindowRef))
         {
             GLFW.PollEvents();
+            scene.UpdateAll(new UpdateArgs() {
+                DeltaTime = 0.16f,
+                WPressed = GLFW.GetKey(WindowRef, GLFW.Key.Space) == GLFW.KeyState.Press ? 1 : 0,
+            });
             
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
             RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));

@@ -10,7 +10,7 @@
   
 
   <ItemGroup>
-    <ProjectReference Include="..\Lini\Lini.csproj" />
+    <ProjectReference Include="..\Lini\Source\Lini.csproj" />
   </ItemGroup>
 
 </Project>

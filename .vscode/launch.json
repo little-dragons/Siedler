@@ -11,6 +11,7 @@
             "env": {
                 "LINI_RESOURCE_DIR": "${workspaceFolder}/Resources"
             },
+            "enableStepFiltering": false,
             "logging": {
                 "moduleLoad": false
             },
