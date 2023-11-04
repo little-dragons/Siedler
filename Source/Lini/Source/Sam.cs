@@ -4,6 +4,7 @@ using Lini.Rendering.GLBindings;
 using Lini.Graph;
 using Lini.Windowing;
 using Lini.Graph.Components;
+using Lini.Windowing.Input;
 
 namespace Lini;
 
@@ -126,10 +127,10 @@ public static class Sam
         while (!GLFW.WindowShouldClose(WindowRef))
         {
             GLFW.PollEvents();
-            scene.UpdateAll(new UpdateArgs() {
-                DeltaTime = 0.16f,
-                WPressed = GLFW.GetKey(WindowRef, GLFW.Key.Space) == GLFW.KeyState.Press ? 1 : 0,
-            });
+
+            KeyboardState keyboardState = new(key => GLFW.GetKey(WindowRef, (GLFW.Key)key) == GLFW.KeyState.Press);
+            UpdateArgs args = new(0.16f, keyboardState);
+            scene.UpdateAll(args);
             
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
             RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));

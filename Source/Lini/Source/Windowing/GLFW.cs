@@ -108,7 +108,6 @@ internal static class GLFW
 
     internal enum Key
     {
-        Unknown = -1,
         Space = 32,
         Apostrophe = 39,
         Comma = 44,

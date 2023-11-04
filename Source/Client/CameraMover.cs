@@ -1,5 +1,6 @@
 using Lini.Graph;
 using Lini.Graph.Components;
+using Lini.Windowing.Input;
 
 namespace Client;
 
@@ -11,6 +12,7 @@ public struct CameraMover : IComponent
 
     public readonly void Update(UpdateArgs args)
     {
-        Entity.Transform.Position.Y += args.WPressed * 0.001f;
+        if (args.Keyboard.IsDown(Key.Space))
+            Entity.Transform.Position.Y += 0.001f;
     }
 }

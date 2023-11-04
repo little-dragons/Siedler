@@ -1,7 +1,5 @@
+using Lini.Windowing.Input;
+
 namespace Lini.Graph;
 
-public class UpdateArgs
-{
-    public double DeltaTime { get; set; }
-    public float WPressed { get; set; }
-}
+public record UpdateArgs(double DeltaTime, KeyboardState Keyboard);
