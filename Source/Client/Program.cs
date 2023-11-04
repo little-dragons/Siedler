@@ -41,21 +41,25 @@ static void Run()
 
     Scene scene = new();
     Entity meshEntity = scene.Root.MakeChild();
-    ref var renderer = ref meshEntity.Add<MeshRenderer>(new(mesh, text));
+    meshEntity.Add<MeshRenderer>() = new(mesh, text);
 
     Entity camEntity = scene.Root.MakeChild();
     camEntity.Transform.Position.Z = -3f;
     camEntity.Transform.Position.Y = 1f;
 
-    ref var cam = ref camEntity.Add<Camera>(new()
+    camEntity.Add<Camera>(out var cameraRef) = new()
     {
         FieldOfView = MathF.PI / 1.9f,
         NearPlane = 0.1f,
         FarPlane = 100f,
         AspectRatio = 1,
-    }, out var cameraRef);
+        Entity = camEntity,
+    };
 
-    camEntity.Add<CameraMover>();
+    camEntity.Add<CameraMover>() = new()
+    {
+        Entity = camEntity,
+    };
 
     scene.ActiveCamera = cameraRef;
 

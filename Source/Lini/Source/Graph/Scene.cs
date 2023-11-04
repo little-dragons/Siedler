@@ -20,12 +20,6 @@ public class Scene
     internal Entity NewEntity() 
         => new(this);
     
-    // internal ComponentRef<T> NewComponent<T>() where T : struct, IComponent
-    //     => Components.Add<T>();
-
-    // internal void DeleteComponent<T>(ComponentRef<T> comp) where T : struct, IComponent 
-    //     => Components.Delete(comp);
-
 
     internal void UpdateAll(UpdateArgs args)
     {

@@ -14,10 +14,10 @@ internal sealed class ComponentsPool
 
     public ComponentsPool()
     {
-        foreach (var data in ComponentReflection.ComponentData)
+        foreach (var data in ComponentReflection.ReadOnlyEntries)
         {
             var compType = typeof(LayeredValuePool<>).MakeGenericType(data.TypeInfo)!;
-            var comp = Activator.CreateInstance(compType, 1024)!;
+            var comp = Activator.CreateInstance(compType)!;
             Components.Add(comp);
 
             var retMethod = compType.GetMethod(nameof(LayeredValuePool<int>.Return), BindingFlags.Instance | BindingFlags.Public)!;
@@ -29,28 +29,28 @@ internal sealed class ComponentsPool
     }
 
     private LayeredValuePool<T> GetPool<T>() where T : struct, IComponent
-        => (Components[T.TypeID] as LayeredValuePool<T>)!;
+        => (LayeredValuePool<T>)Components[T.TypeID];
 
 
     internal void Update(UpdateArgs args)
     {
         for (int i = 0; i < Components.Count; i++)
         {
-            var data = ComponentReflection.ComponentData[i];
+            var data = ComponentReflection.ReadOnlyEntries[i];
             if (data.EarlyUpdater is not null)
                 DoForAll[i](data.EarlyUpdater(args));
         }
 
         for (int i = 0; i < Components.Count; i++)
         {
-            var data = ComponentReflection.ComponentData[i];
+            var data = ComponentReflection.ReadOnlyEntries[i];
             if (data.Updater is not null)
                 DoForAll[i](data.Updater(args));
         }
 
         for (int i = 0; i < Components.Count; i++)
         {
-            var data = ComponentReflection.ComponentData[i];
+            var data = ComponentReflection.ReadOnlyEntries[i];
             if (data.LateUpdater is not null)
                 DoForAll[i](data.LateUpdater(args));
         }
@@ -60,18 +60,9 @@ internal sealed class ComponentsPool
     {
         var pool = GetPool<T>();
         var idx = pool.Retrieve();
+        
         comp = new(idx);
-        ref T val = ref pool[idx];
-        return ref val;
-    }
-
-    public ref T New<T>(in T item, out ComponentRef<T> comp) where T : struct, IComponent
-    {
-        var pool = GetPool<T>();
-        var idx = pool.Retrieve(in item);
-        comp = new(idx);
-        ref T val = ref pool[idx];
-        return ref val;
+        return ref pool[idx];
     }
 
     public void Delete<T>(ComponentRef<T> comp) where T : struct, IComponent

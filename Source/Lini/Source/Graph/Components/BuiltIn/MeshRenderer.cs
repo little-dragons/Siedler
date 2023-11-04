@@ -5,11 +5,11 @@ namespace Lini.Graph.Components.BuiltIn;
 
 public struct MeshRenderer : IComponent, IRenderable
 {
+    static int IComponent.TypeID { get; set; }
+    
     public Mesh Mesh { get; private set; }
     public Texture? Texture { get; private set; }
 
-    static int IComponent.TypeID { get; set; }
-    public Entity Entity { get; set; } = default!;
 
     public MeshRenderer(Mesh mesh)
     {

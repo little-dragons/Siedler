@@ -33,6 +33,12 @@ public class LayeredValuePool<T> where T : struct
     private int LastLayerCount { get; set; }
 
     /// <summary>
+    /// This index keeps track of the position of the last element. This is useful to remember for clean-up
+    /// purposes.
+    /// </summary>
+    private int LastElementIndex { get; set; }
+
+    /// <summary>
     /// A list of holes as indices into this data structure. The items contained in holes must never be 
     /// outside of the actual used indices at any given time: This enables faster fetching from this list,
     /// but increases computational load for return. This is a tradeoff in line with the overall design of 
@@ -61,9 +67,8 @@ public class LayeredValuePool<T> where T : struct
         Clear();
     }
 
-    public int Retrieve(in T item)
+    public int Retrieve()
     {
-        // TODO: item assignment
         // first, try to fill holes
         if (Holes.Any())
         {
@@ -74,21 +79,22 @@ public class LayeredValuePool<T> where T : struct
 
         // there is still room in this layer
         if (LastLayerCount < ElementsPerLayer)
+        {
+            LastElementIndex++;
             return MakeIndex(Layers.Count - 1, LastLayerCount++);
+        }
 
         // another layer needs to be added
         Layers.Add(new T[ElementsPerLayer]);
-        Layers[^1][0] = item;
+        LastElementIndex++;
         LastLayerCount = 1;
 
         return MakeIndex(Layers.Count - 1, 0);
     }
 
-    public int Retrieve()
-        => Retrieve(default);
-
     public ref T this[int index]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             var (layerIndex, partIndex) = ResolveIndex(index);
@@ -153,29 +159,27 @@ public class LayeredValuePool<T> where T : struct
         // we choose the second option
 
 
-        if (index == Count - 1)
+        if (index == LastElementIndex)
         {
             if (Holes.Contains(index - 1))
             {
-                int newLastElementIndex = index - 2;
-                while (Holes.Contains(newLastElementIndex) && newLastElementIndex >= 0)
+                LastElementIndex = index - 2;
+                while (Holes.Contains(LastElementIndex) && LastElementIndex >= 0)
                 {
                     // because we will skip those holes anyway
-                    Holes.Remove(newLastElementIndex);
-                    newLastElementIndex--;
+                    Holes.Remove(LastElementIndex);
+                    LastElementIndex--;
                 }
 
                 // there are no elements in this pool
-                if (newLastElementIndex < 0)
+                if (LastElementIndex < 0)
                 {
-                    Layers.Clear();
-                    Holes.Clear();
-                    LastLayerCount = ElementsPerLayer;
+                    Clear();
                     return;
                 }
 
                 // everything between this value and the current last value is a hole and should be removed.
-                var (newLastLayer, newLastIdx) = ResolveIndex(newLastElementIndex);
+                var (newLastLayer, newLastIdx) = ResolveIndex(LastElementIndex);
 
                 for (int i = Layers.Count - 1; i > newLastLayer; i--)
                     Layers.RemoveAt(i);
@@ -206,5 +210,6 @@ public class LayeredValuePool<T> where T : struct
         Layers.Clear();
         Holes.Clear();
         LastLayerCount = ElementsPerLayer;
+        LastElementIndex = -1;
     }
 }

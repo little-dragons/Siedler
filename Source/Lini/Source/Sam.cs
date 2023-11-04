@@ -101,6 +101,7 @@ public static class Sam
 
         Logger.Info("Terminating.", Logger.Source.MainThread);
         SharedObjects.Terminate();
+        ComponentReflection.Terminate();
 
         // GLFW termination requires that a context is only current on the main thread.
         RenderThread.Do(() => GLFW.MakeContextCurrent(GLFW.WindowRef.Null));

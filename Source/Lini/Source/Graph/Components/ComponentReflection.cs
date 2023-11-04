@@ -4,16 +4,41 @@ using Lini.Miscellaneous;
 
 namespace Lini.Graph.Components;
 
-internal static partial class ComponentReflection
+/// <summary>
+/// This class gathers information about all types implementing <see cref="IComponent"/> by reflection.
+/// </summary>
+internal static class ComponentReflection
 {
-    public class Data
+    /// <summary>
+    /// This class stores extracted data by reflection. <see cref="TypeInfo"/> stores whose component's data
+    /// this instance stores and then also provides methods to access the update methods.
+    /// </summary>
+    public class Entry
     {
+        /// <summary>
+        /// The type of the component derivign from <see cref="IComponent"/>.
+        /// </summary>
         public readonly TypeInfo TypeInfo;
+
+        /// <summary>
+        /// This is a function returning another function. Given an instance of <see cref="UpdateArgs"/>,
+        /// it provides a method for an object of type <see cref="TypeInfo"/> to call its 
+        /// <see cref="IComponent.Update(UpdateArgs)"/> method. Because the type is dynamic, it cannot be
+        /// expressed in the type system more clearly.
+        /// </summary>
         public readonly Func<UpdateArgs, Delegate>? Updater;
+
+        /// <summary>
+        /// See the documentation of <see cref="Updater"/>.
+        /// </summary>
         public readonly Func<UpdateArgs, Delegate>? EarlyUpdater;
+
+        /// <summary>
+        /// See the documentation of <see cref="Updater"/>.
+        /// </summary>
         public readonly Func<UpdateArgs, Delegate>? LateUpdater;
 
-        public Data(TypeInfo typeInfo, Func<UpdateArgs, Delegate>? updater, Func<UpdateArgs, Delegate>? earlyUpdater, Func<UpdateArgs, Delegate>? lateUpdater)
+        public Entry(TypeInfo typeInfo, Func<UpdateArgs, Delegate>? updater, Func<UpdateArgs, Delegate>? earlyUpdater, Func<UpdateArgs, Delegate>? lateUpdater)
         {
             TypeInfo = typeInfo;
             Updater = updater;
@@ -22,10 +47,10 @@ internal static partial class ComponentReflection
         }
     }
 
-    private static readonly List<Data> WriteComponentData = new();
-    public static readonly IReadOnlyList<Data> ComponentData = WriteComponentData.AsReadOnly();
+    private static readonly List<Entry> Entries = new();
+    public static IReadOnlyList<Entry> ReadOnlyEntries => Entries.AsReadOnly();
 
-    public static bool IsInitialized => WriteComponentData.Any();
+    public static bool IsInitialized => Entries.Any();
 
     public static void Initialize(IEnumerable<Assembly> assemblies)
     {
@@ -36,18 +61,21 @@ internal static partial class ComponentReflection
                 if (!info.ImplementedInterfaces.Contains(typeof(IComponent)))
                     continue;
 
+                if (!info.IsValueType)
+                    Logger.Warn($"The type {info.FullName} implements {nameof(IComponent)} but is not a value type. Unexpected behavior may occur.");
+
                 Func<UpdateArgs, Delegate>? updater = null;
                 Func<UpdateArgs, Delegate>? earlyUpdater = null;
                 Func<UpdateArgs, Delegate>? lateUpdater = null;
-                int id = WriteComponentData.Count;
+                int id = Entries.Count;
 
-                var property = info.GetProperty(typeof(IComponent).FullName + "." + nameof(IComponent.TypeID), BindingFlags.Static | BindingFlags.NonPublic);
-                property!.SetValue(null, id);
+                var property = info.GetProperty(typeof(IComponent).FullName + "." + nameof(IComponent.TypeID), BindingFlags.Static | BindingFlags.NonPublic)!;
+                property.SetValue(null, id);
 
                 {
-                    var early = info.GetMethod(nameof(IComponent.EarlyUpdate), BindingFlags.Instance | BindingFlags.Public)!;
-                    var normal = info.GetMethod(nameof(IComponent.Update), BindingFlags.Instance | BindingFlags.Public)!;
-                    var late = info.GetMethod(nameof(IComponent.LateUpdate), BindingFlags.Instance | BindingFlags.Public)!;
+                    var early = info.GetMethod(nameof(IComponent.EarlyUpdate))!;
+                    var normal = info.GetMethod(nameof(IComponent.Update))!;
+                    var late = info.GetMethod(nameof(IComponent.LateUpdate))!;
 
                     var actionType = typeof(RefAction<>).MakeGenericType(info.AsType());
 
@@ -68,6 +96,7 @@ internal static partial class ComponentReflection
                         var wrapper = Expression.Lambda<Func<UpdateArgs, Delegate>>(method, args);
                         var caller = wrapper.Compile();
                     }
+                    
                     if (late is not null)
                     {
                         var target = Expression.Parameter(info.MakeByRefType());
@@ -80,13 +109,13 @@ internal static partial class ComponentReflection
 
 
 
-                WriteComponentData.Add(new(info, updater, earlyUpdater, lateUpdater));
+                Entries.Add(new(info, updater, earlyUpdater, lateUpdater));
             }
 
     }
 
     public static void Terminate()
     {
-        WriteComponentData.Clear();
+        Entries.Clear();
     }
 }
