@@ -129,7 +129,8 @@ public static class Sam
             GLFW.PollEvents();
 
             KeyboardState keyboardState = new(key => GLFW.GetKey(WindowRef, (GLFW.Key)key) == GLFW.KeyState.Press);
-            UpdateArgs args = new(0.16f, keyboardState);
+            MouseState mouseState = new(mb => GLFW.GetMouseButton(WindowRef, (GLFW.Mouse)mb) == GLFW.KeyState.Press);
+            UpdateArgs args = new(0.16f, keyboardState, mouseState);
             scene.UpdateAll(args);
             
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));

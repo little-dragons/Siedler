@@ -12,7 +12,7 @@ public struct CameraMover : IComponent
 
     public readonly void Update(UpdateArgs args)
     {
-        if (args.Keyboard.IsDown(Key.Space))
+        if (args.Keyboard.IsDown(Key.Space) || args.Mouse.IsDown(MouseButton.Left))
             Entity.Transform.Position.Y += 0.001f;
     }
 }
