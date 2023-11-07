@@ -58,6 +58,8 @@ public class LayeredValuePoolTest
             for (int j = 0; j < count; j++)
                 keys.Add(Pool.Retrieve());
 
+            keys = keys.OrderBy(x => Random.Shared.Next()).ToList();
+
             for (int j = 0; j < count; i++)
             {
                 switch (Random.Shared.Next(2))

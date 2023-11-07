@@ -44,8 +44,8 @@ static void Run()
     meshEntity.Add<MeshRenderer>() = new(mesh, text);
 
     Entity camEntity = scene.Root.MakeChild();
-    camEntity.Transform.Position.Z = -3f;
-    camEntity.Transform.Position.Y = 1f;
+    camEntity.Transform.Position.Z = 3f;
+    camEntity.Transform.Position.Y = 0f;
 
     camEntity.Add<Camera>(out var cameraRef) = new()
     {
@@ -58,6 +58,7 @@ static void Run()
 
     camEntity.Add<CameraMover>() = new()
     {
+        Speed = 0.06f,
         Entity = camEntity,
     };
 
