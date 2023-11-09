@@ -1,5 +1,6 @@
 namespace Lini.Windowing;
 
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 internal static class GLFW
@@ -286,12 +287,50 @@ internal static class GLFW
     internal static extern void SwapInterval(bool useVsync);
 
 
+
+
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     internal delegate void ErrorFun(ErrorCode errorCode, [MarshalAs(UnmanagedType.LPStr)] string message);
 
     [DllImport(LibName, EntryPoint = "glfwSetErrorCallback")]
     internal static extern ErrorFun SetErrorCallback(ErrorFun errorFun);
 
+
+
+
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate void CharFun(WindowRef window, uint codepoint);
+    
+    [DllImport(LibName, EntryPoint = "glfwSetCharCallback")]
+    internal static extern IntPtr SetCharCallback(WindowRef window, CharFun charFun);
+
+
+
+
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate void KeyFun(WindowRef window, Key key, int scancode, KeyState action, int modes);
+
+    [DllImport(LibName, EntryPoint = "glfwSetKeyCallback")]
+    internal static extern IntPtr SetKeyCallback(WindowRef window, KeyFun keyFun);
+
+
+
+
+
+    [DllImport(LibName, EntryPoint = "glfwGetCursorPos")]
+    internal static extern void GetCursorPos(WindowRef window, out double xPos, out double yPos);
+
+    internal static Vector2 GetCursorPos(WindowRef window)
+    {
+        GetCursorPos(window, out double x, out double y);
+        return new()
+        {
+            X = (float)x,
+            Y = (float)y
+        };
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct VideoMode

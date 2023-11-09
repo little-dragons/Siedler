@@ -7,12 +7,12 @@ public struct Camera : IComponent
 {
     static int IComponent.TypeID { get; set; }
 
-    public Entity Entity;
+    public required Entity Entity;
 
-    public float FieldOfView;
-    public float NearPlane;
-    public float FarPlane;
-    public float AspectRatio;
+    public required float FieldOfView;
+    public required float NearPlane;
+    public required float FarPlane;
+    public required float AspectRatio;
 
 
     public readonly Matrix4x4 ViewMatrix

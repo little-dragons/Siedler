@@ -11,6 +11,7 @@ namespace Lini;
 public static class Sam
 {
     private static GLFW.WindowRef WindowRef { get; set; }
+    private static GLFWCallbacksWrapper CallbacksWrapper { get; set; } = null!;
     public static bool IsInitialized { get; private set; }
     public static readonly Version Version = new(0, 0, 1);
 
@@ -51,6 +52,8 @@ public static class Sam
             Logger.Error("Could not make window, aborting.", Logger.Source.GLFW);
             return IsInitialized;
         }
+
+        CallbacksWrapper = new(WindowRef);
 
 
         Thread.CurrentThread.Name = "MainThread";
@@ -121,18 +124,17 @@ public static class Sam
 
         var time = DateTime.Now.Ticks;
 
-    
+
         Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
         while (!GLFW.WindowShouldClose(WindowRef))
         {
+            CallbacksWrapper.Reset();
             GLFW.PollEvents();
 
-            KeyboardState keyboardState = new(key => GLFW.GetKey(WindowRef, (GLFW.Key)key) == GLFW.KeyState.Press);
-            MouseState mouseState = new(mb => GLFW.GetMouseButton(WindowRef, (GLFW.Mouse)mb) == GLFW.KeyState.Press);
-            UpdateArgs args = new(0.16f, keyboardState, mouseState);
+            UpdateArgs args = new(0.16f, CallbacksWrapper);
             scene.UpdateAll(args);
-            
+
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
             RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));
 

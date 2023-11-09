@@ -9,29 +9,24 @@ public struct CameraMover : IComponent
 {
     static int IComponent.TypeID { get; set; }
 
-    public Entity Entity;
-    public float Speed;
+    public required Entity Entity;
+    public required float Speed;
 
-    public CameraMover(Entity entity, float speed)
-    {
-        Entity = entity;
-        Speed = speed;
-    }
 
     public readonly void Update(UpdateArgs args)
     {
         Vector3 direction = Vector3.Zero;
-        if (args.Keyboard.IsDown(Key.W))
+        if (args.Input.IsDown(Key.W))
             direction -= Vector3.UnitZ;
-        if (args.Keyboard.IsDown(Key.S))
+        if (args.Input.IsDown(Key.S))
             direction += Vector3.UnitZ;
-        if (args.Keyboard.IsDown(Key.D))
+        if (args.Input.IsDown(Key.D))
             direction += Vector3.UnitX;
-        if (args.Keyboard.IsDown(Key.A))
+        if (args.Input.IsDown(Key.A))
             direction -= Vector3.UnitX;
-        if (args.Keyboard.IsDown(Key.LeftShift))
+        if (args.Input.IsDown(Key.LeftShift))
             direction += Vector3.UnitY;
-        if (args.Keyboard.IsDown(Key.LeftControl))
+        if (args.Input.IsDown(Key.LeftControl))
             direction -= Vector3.UnitY;
 
         if (direction != Vector3.Zero) {
