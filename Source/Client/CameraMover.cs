@@ -29,7 +29,8 @@ public struct CameraMover : IComponent
         if (args.Input.IsDown(Key.LeftControl))
             direction -= Vector3.UnitY;
 
-        if (direction != Vector3.Zero) {
+        if (direction != Vector3.Zero)
+        {
             var transformedDirection = Vector3.Transform(direction / direction.Length(), Entity.Transform.Rotation);
             Entity.Transform.Position += transformedDirection * Speed * args.DeltaTime;
         }

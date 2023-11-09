@@ -88,6 +88,8 @@ public sealed class Entity
     public ref T Add<T>() where T : struct, IComponent
         => ref TryAdd<T>(out bool _, out var _);
 
+    public bool TryGet<T>(out ComponentRef<T> compRef) where T : struct, IComponent
+        => Components.TryGet(out compRef);
 
     public void Remove<T>(ComponentRef<T> comp) where T : struct, IComponent
     {

@@ -15,22 +15,16 @@ Run();
 
 static void Run()
 {
-    WindowInfo info = new()
-    {
-        Width = 600,
-        Height = 600,
-        FullScreen = false,
-        Title = "Lini"
-    };
+    WindowInfo info = new("Lini", 600, 600, false);
 
     Sam.Initialize(info);
 
     var vertices =
         new Vertex[] {
-        new() { TextureCoordinates = new(0, 0), Position = new(0.5f, -0.5f, 0.0f) },
-        new() { TextureCoordinates = new(1, 0), Position = new(-0.5f, -0.5f, 0.0f) },
-        new() { TextureCoordinates = new(0, 1), Position = new(0.5f, 0.5f, 0.0f) },
-        new() { TextureCoordinates = new(1, 1), Position = new(-0.5f, 0.5f, 0.0f) } };
+            new() { TextureCoordinates = new(0, 0), Position = new(0.5f, -0.5f, 0.0f) },
+            new() { TextureCoordinates = new(1, 0), Position = new(-0.5f, -0.5f, 0.0f) },
+            new() { TextureCoordinates = new(0, 1), Position = new(0.5f, 0.5f, 0.0f) },
+            new() { TextureCoordinates = new(1, 1), Position = new(-0.5f, 0.5f, 0.0f) } };
 
     var indices =
         new uint[] { 0, 1, 2, 1, 2, 3 };
@@ -70,4 +64,3 @@ static void Run()
 
     Sam.Terminate();
 }
-
