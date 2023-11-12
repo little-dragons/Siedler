@@ -17,12 +17,14 @@ namespace Lini.Windowing.Input;
 /// Each instance provides read access to the data collected from the callbacks and a <see cref="Reset"/>
 /// method which must be called in between each frame, otherwise data is not correctly aggregated.
 /// </summary>
-internal class GLFWCallbacksWrapper : IInput
+internal class GLFWInputWrapper : IInput
 {
     /// <summary>
     /// The window for which callbacks were registered.
     /// </summary>
     public GLFW.WindowRef Window { get; init; }
+
+    private bool UsesRawMouse { get; init; }
 
 
     /// <summary>
@@ -30,28 +32,37 @@ internal class GLFWCallbacksWrapper : IInput
     /// </summary>
     /// <param name="window">The window to which to register the callbacks. Callbacks shall not be
     /// registered for this window.</param>
-    public GLFWCallbacksWrapper(GLFW.WindowRef window)
+    public GLFWInputWrapper(GLFW.WindowRef window)
     {
         Window = window;
+
+        UsesRawMouse = GLFW.RawMouseMotionSupported();
+        if (UsesRawMouse)
+            GLFW.SetInputMode(window, GLFW.InputMode.RawMouseMotion, true);
 
         KeyCallback = KeyInput;
         if (GLFW.SetKeyCallback(Window, KeyCallback) != 0)
             Logger.Warn($"Key callback was already set for window \'{Window.Raw}\'", Logger.Source.GLFW);
-        
+
         Decoder = new(!BitConverter.IsLittleEndian, false, true);
         CharCallback = CharInput;
         if (GLFW.SetCharCallback(Window, CharCallback) != 0)
             Logger.Warn($"Char callback was already set for window \'{Window.Raw}\'", Logger.Source.GLFW);
+
+        MouseButtonCallback = MouseButtonInput;
+        if (GLFW.SetMouseButtonCallback(Window, MouseButtonCallback) != 0)
+            Logger.Warn($"Mouse button callback was already set for window \'{Window.Raw}\'", Logger.Source.GLFW);
+
+        CursorPosCallback = CursorPosInput;
+        if (GLFW.SetCursorPosCallback(Window, CursorPosCallback) != 0)
+            Logger.Warn($"Cursor position callback was already set for window \'{Window.Raw}\'", Logger.Source.GLFW);
 
 
         foreach (var val in Enum.GetValues<Key>())
             Keys.Add(val, GLFW.GetKey(Window, (GLFW.Key)val) == GLFW.KeyState.Press);
 
         foreach (var val in Enum.GetValues<MouseButton>())
-            MouseButtons.Add(val, GLFW.GetMouseButton(Window, (GLFW.Mouse)val) == GLFW.KeyState.Press);
-
-        foreach (var val in Enum.GetValues<MouseAxis>())
-            MouseAxes.Add(val, 0);
+            MouseButtons.Add(val, GLFW.GetMouseButton(Window, (GLFW.MouseButton)val) == GLFW.KeyState.Press);
 
         Reset();
     }
@@ -67,7 +78,7 @@ internal class GLFWCallbacksWrapper : IInput
     private Dictionary<Key, bool> Keys { get; } = new();
     public bool IsDown(Key key)
         => Keys[key];
-    
+
     /// <summary>
     /// This method handles a single key input event from glfw. It updates the state in <see cref="Keys"/>.
     /// It discards some parameters as those are not intendend to be used by the engine.
@@ -82,9 +93,23 @@ internal class GLFWCallbacksWrapper : IInput
     }
 
 
+    /// <summary>
+    /// See the documentation of <see cref="KeyCallback"/>.
+    /// </summary>
+    private GLFW.MouseButtonFun MouseButtonCallback { get; set; }
+
     private Dictionary<MouseButton, bool> MouseButtons { get; } = new();
     public bool IsDown(MouseButton button)
         => MouseButtons[button];
+
+    private void MouseButtonInput(GLFW.WindowRef window, GLFW.MouseButton button, GLFW.KeyState keystate, int mods)
+    {
+        MouseButtons[(MouseButton)button] = keystate switch
+        {
+            GLFW.KeyState.Release => false,
+            _ => true
+        };
+    }
 
 
     /// <summary>
@@ -98,7 +123,7 @@ internal class GLFWCallbacksWrapper : IInput
     /// The text aggregated since the last call to <see cref="Reset"/>.
     /// </summary>
     public string Text { get; private set; } = "";
-    
+
     /// <summary>
     /// See the documentation of <see cref="KeyCallback"/>.
     /// </summary>
@@ -110,11 +135,20 @@ internal class GLFWCallbacksWrapper : IInput
     }
 
 
-    private Vector2 LastMousePos { get; set; }
-    private Dictionary<MouseAxis, float> MouseAxes { get; } = new();
-    public float GetAxis(MouseAxis axis)
-        => MouseAxes[axis];
 
+
+    public Vector2 ScrollDelta { get; private set; }
+    public Vector2 MousePixelDelta { get; private set; }
+    public Vector2 RawMouseDelta { get; private set; }
+    private Vector2 LastMousePosition { get; set; }
+    public Vector2 MousePosition { get; private set; }
+
+    private GLFW.CursorPosFun CursorPosCallback { get; set; }
+    private void CursorPosInput(GLFW.WindowRef window, double x, double y)
+    {
+        MousePosition = new((float)x, (float)y);
+        MousePixelDelta = LastMousePosition - MousePosition;
+    }
 
 
     /// <summary>
@@ -124,10 +158,9 @@ internal class GLFWCallbacksWrapper : IInput
     public void Reset()
     {
         Text = "";
-        LastMousePos = GLFW.GetCursorPos(Window);
-        foreach (var (k, _) in MouseAxes)
-        {
-            MouseAxes[k] = 0;
-        }
+        LastMousePosition = MousePosition;
+        RawMouseDelta = Vector2.Zero;
+        MousePixelDelta = Vector2.Zero;
+        ScrollDelta = Vector2.Zero;
     }
 }

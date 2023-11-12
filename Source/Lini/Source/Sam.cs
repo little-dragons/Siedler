@@ -11,7 +11,7 @@ namespace Lini;
 public static class Sam
 {
     private static GLFW.WindowRef WindowRef { get; set; }
-    private static GLFWCallbacksWrapper CallbacksWrapper { get; set; } = null!;
+    private static GLFWInputWrapper CallbacksWrapper { get; set; } = null!;
     public static bool IsInitialized { get; private set; }
     public static readonly Version Version = new(0, 0, 1);
 

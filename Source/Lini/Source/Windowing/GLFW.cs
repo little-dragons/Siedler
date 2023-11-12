@@ -2,6 +2,7 @@ namespace Lini.Windowing;
 
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Lini.Windowing.Input;
 
 internal static class GLFW
 {
@@ -62,6 +63,15 @@ internal static class GLFW
         ContextReleaseBehavior = 0x00022009,
         ContextNoError = 0x0002200A,
         ContextCreationAPI = 0x0002200B,
+    }
+
+    internal enum InputMode
+    {
+        Cursor = 0x00033001,
+        StickyKeys = 0x00033002,
+        StickyMouseButtons = 0x00033003,
+        LockKeyMods = 0x00033004,
+        RawMouseMotion = 0x00033005,
     }
 
     internal enum WindowAttributeType
@@ -204,7 +214,7 @@ internal static class GLFW
         CapsLock = 0x10,
         NumLock = 0x20,
     }
-    internal enum Mouse
+    internal enum MouseButton
     {
         Left = 0,
         Right = 1,
@@ -249,6 +259,10 @@ internal static class GLFW
     [DllImport(LibName, EntryPoint = "glfwWindowShouldClose")]
     internal static extern bool WindowShouldClose(WindowRef window);
 
+    [DllImport(LibName, EntryPoint = "glfwSetInputMode")]
+    internal static extern void SetInputMode(WindowRef window, InputMode mode, bool value);
+
+
     [DllImport(LibName, EntryPoint = "glfwPollEvents")]
     internal static extern void PollEvents();
 
@@ -274,7 +288,7 @@ internal static class GLFW
     internal static extern KeyState GetKey(WindowRef window, Key key);
 
     [DllImport(LibName, EntryPoint = "glfwGetMouseButton")]
-    internal static extern KeyState GetMouseButton(WindowRef window, Mouse button);
+    internal static extern KeyState GetMouseButton(WindowRef window, MouseButton button);
 
 
     [DllImport(LibName, EntryPoint = "glfwSetWindowMonitor")]
@@ -301,7 +315,7 @@ internal static class GLFW
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     internal delegate void CharFun(WindowRef window, uint codepoint);
-    
+
     [DllImport(LibName, EntryPoint = "glfwSetCharCallback")]
     internal static extern IntPtr SetCharCallback(WindowRef window, CharFun charFun);
 
@@ -310,12 +324,25 @@ internal static class GLFW
 
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-    internal delegate void KeyFun(WindowRef window, Key key, int scancode, KeyState action, int modes);
+    internal delegate void KeyFun(WindowRef window, Key key, int scancode, KeyState action, int mods);
 
     [DllImport(LibName, EntryPoint = "glfwSetKeyCallback")]
     internal static extern IntPtr SetKeyCallback(WindowRef window, KeyFun keyFun);
 
 
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate void MouseButtonFun(WindowRef window, MouseButton button, KeyState action, int mods);
+
+    [DllImport(LibName, EntryPoint = "glfwSetMouseButtonCallback")]
+    internal static extern IntPtr SetMouseButtonCallback(WindowRef window, MouseButtonFun keyFun);
+
+
+
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate void CursorPosFun(WindowRef window, double x, double y);
+    [DllImport(LibName, EntryPoint = "glfwSetCursorPosCallback")]
+    internal static extern IntPtr SetCursorPosCallback(WindowRef window, CursorPosFun posFun);
 
 
 
@@ -331,6 +358,9 @@ internal static class GLFW
             Y = (float)y
         };
     }
+
+    [DllImport(LibName, EntryPoint = "glfwRawMouseMotionSupported")]
+    internal static extern bool RawMouseMotionSupported();
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct VideoMode
