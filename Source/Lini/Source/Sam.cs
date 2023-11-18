@@ -4,16 +4,14 @@ using Lini.Rendering.GLBindings;
 using Lini.Graph;
 using Lini.Windowing;
 using Lini.Graph.Components;
-using Lini.Windowing.Input;
 
 namespace Lini;
 
 public static class Sam
 {
-    private static GLFW.WindowRef WindowRef { get; set; }
-    private static GLFWInputWrapper CallbacksWrapper { get; set; } = null!;
-    public static bool IsInitialized { get; private set; }
-    public static readonly Version Version = new(0, 0, 1);
+    public static Window Window { get; private set; } = null!;
+    public static bool IsInitialized { get; private set; } = false;
+    public static Version Version => new(0, 0, 1);
 
     public static bool Initialize(WindowInfo winInfo)
     {
@@ -25,6 +23,8 @@ public static class Sam
         Resources.Initialize();
         ComponentReflection.Initialize(AppDomain.CurrentDomain.GetAssemblies());
 
+        Thread.CurrentThread.Name = "MainThread";
+        RenderThread.Initialize();
 
         Logger.Info($"Using version {GLFW.GetVersion()}.", Logger.Source.GLFW);
 
@@ -40,32 +40,17 @@ public static class Sam
             Logger.Error($"{ec} - {str}", Logger.Source.GLFWCallback);
         });
 
-        GLFW.WindowHint(GLFW.WindowHintType.ClientApi, GLFW.WindowValue.OpenGLAPI);
-        GLFW.WindowHint(GLFW.WindowHintType.OpenGLProfile, GLFW.WindowValue.OpenGLCoreProfile);
-        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMajor, 4);
-        GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, 0);
-        GLFW.WindowHint(GLFW.WindowHintType.Samples, 4);
-
-        WindowRef = GLFW.CreateWindow(winInfo.Width, winInfo.Height, winInfo.Title, winInfo.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, 0);
-        if (WindowRef.Raw == 0)
+        if (!Window.TryMake(winInfo, out Window? w))
         {
             Logger.Error("Could not make window, aborting.", Logger.Source.GLFW);
             return IsInitialized;
         }
+        Window = w;
+        
 
-        CallbacksWrapper = new(WindowRef);
-
-
-        Thread.CurrentThread.Name = "MainThread";
-        RenderThread.Initialize();
 
         RenderThread.Do(() =>
         {
-            GLFW.MakeContextCurrent(WindowRef);
-            GLFW.SwapInterval(true);
-            GL.Load(GLFW.GetProcAddress);
-
-
             GL.DebugProc callback = (s, t, id, sev, message) =>
             {
                 Logger.Level level = sev switch
@@ -127,20 +112,19 @@ public static class Sam
 
         Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
-        while (!GLFW.WindowShouldClose(WindowRef))
+        while (!GLFW.WindowShouldClose(Window.Ref))
         {
-            CallbacksWrapper.Reset();
             GLFW.PollEvents();
 
-            UpdateArgs args = new(0.16f, CallbacksWrapper);
+            UpdateArgs args = new(0.16f, Window.Input);
             scene.UpdateAll(args);
 
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
             RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));
 
-            RenderThread.Finish();
+            Window.FinishFrame();
 
-            RenderThread.Do(() => GLFW.SwapBuffers(WindowRef));
+            RenderThread.Finish();
         }
 
         Logger.Info("Exiting main loop.", Logger.Source.MainThread);
