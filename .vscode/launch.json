@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Source/Client/bin/Debug/net7.0/Client.dll",
+            "program": "${workspaceFolder}/Source/Client/bin/Debug/net8.0/Client.dll",
             "args": [],
             "env": {
                 "LINI_RESOURCE_DIR": "${workspaceFolder}/Resources"
