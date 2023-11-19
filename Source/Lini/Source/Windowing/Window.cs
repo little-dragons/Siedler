@@ -65,13 +65,16 @@ public class Window
 
         if (Context is null)
         {
+            Context = reference;
             RenderThread.Do(() =>
             {
                 GLFW.MakeContextCurrent(reference);
-                Context = reference;
                 GL.Load(GLFW.GetProcAddress);
             });
         }
+
+        if (GLFW.RawMouseMotionSupported())
+            GLFW.SetInputMode(reference, GLFW.InputMode.RawMouseMotion, true);
 
         window = new(reference);
         return true;

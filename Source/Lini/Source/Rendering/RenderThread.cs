@@ -16,7 +16,7 @@ namespace Lini.Rendering;
 internal static class RenderThread
 {
     private static ConcurrentQueue<Action> WorkItems = null!;
-    private static Thread ThreadHandle = null!;
+    private static Thread Handle = null!;
 
 
     private static AutoResetEvent StartThreadEvent = null!;
@@ -28,11 +28,11 @@ internal static class RenderThread
         WorkDoneEvent = new(false);
         WorkItems = new();
 
-        ThreadHandle = new(RenderThreadLoop)
+        Handle = new(RenderThreadLoop)
         {
             Name = "RenderThread"
         };
-        ThreadHandle.Start();
+        Handle.Start();
 
         Logger.Info("Started.", Logger.Source.RenderThread);
     }
@@ -47,7 +47,7 @@ internal static class RenderThread
         Logger.Info("Terminate command received.", Logger.Source.RenderThread);
         WorkItems.Enqueue(() => ThreadToTerminate = true);
         StartThreadEvent.Set();
-        ThreadHandle.Join();
+        Handle.Join();
     }
 
     /// <summary>

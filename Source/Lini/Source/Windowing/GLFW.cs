@@ -2,7 +2,6 @@ namespace Lini.Windowing;
 
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Lini.Windowing.Input;
 
 internal static class GLFW
 {
