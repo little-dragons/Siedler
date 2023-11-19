@@ -254,7 +254,7 @@ internal static class GLFW
     }
 
     [DllImport(LibName, EntryPoint = "glfwCreateWindow")]
-    internal static extern WindowRef CreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, MonitorRef monitor, IntPtr _2);
+    internal static extern WindowRef CreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, MonitorRef monitor, WindowRef share);
 
     [DllImport(LibName, EntryPoint = "glfwWindowShouldClose")]
     internal static extern bool WindowShouldClose(WindowRef window);

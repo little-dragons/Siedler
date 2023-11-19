@@ -112,7 +112,7 @@ public static class Sam
 
         Logger.Info("Starting main loop.", Logger.Source.MainThread);
 
-        while (!GLFW.WindowShouldClose(Window.Ref))
+        while (!Window.ReceivedCloseMessage())
         {
             GLFW.PollEvents();
 

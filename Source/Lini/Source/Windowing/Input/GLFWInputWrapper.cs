@@ -59,10 +59,18 @@ internal class GLFWInputWrapper : IInput
 
 
         foreach (var val in Enum.GetValues<Key>())
-            Keys.Add(val, GLFW.GetKey(Window, (GLFW.Key)val) == GLFW.KeyState.Press);
+        {
+            KeysPressed.Add(val, false);
+            KeysReleased.Add(val, false);
+            KeyStates.Add(val, GLFW.GetKey(Window, (GLFW.Key)val) == GLFW.KeyState.Press);
+        }
 
         foreach (var val in Enum.GetValues<MouseButton>())
+        {
+            MouseButtonPressed.Add(val, false);
+            MouseButtonReleased.Add(val, false);
             MouseButtons.Add(val, GLFW.GetMouseButton(Window, (GLFW.MouseButton)val) == GLFW.KeyState.Press);
+        }
 
         Reset();
     }
@@ -75,21 +83,34 @@ internal class GLFWInputWrapper : IInput
     /// </summary>
     private GLFW.KeyFun KeyCallback { get; set; }
 
-    private Dictionary<Key, bool> Keys { get; } = new();
+    private Dictionary<Key, bool> KeyStates { get; } = new();
     public bool IsDown(Key key)
-        => Keys[key];
+        => KeyStates[key];
+
+    private Dictionary<Key, bool> KeysPressed { get; } = new();
+    public bool IsPressed(Key key)
+        => KeysPressed[key];
+    private Dictionary<Key, bool> KeysReleased { get; } = new();
+    public bool IsReleased(Key key)
+        => KeysReleased[key];
 
     /// <summary>
-    /// This method handles a single key input event from glfw. It updates the state in <see cref="Keys"/>.
+    /// This method handles a single key input event from glfw. It updates the state in <see cref="KeyStates"/>.
     /// It discards some parameters as those are not intendend to be used by the engine.
     /// </summary>
     private void KeyInput(GLFW.WindowRef window, GLFW.Key key, int scancode, GLFW.KeyState keystate, int mods)
     {
-        Keys[(Key)key] = keystate switch
+        switch (keystate)
         {
-            GLFW.KeyState.Release => false,
-            _ => true
-        };
+            case GLFW.KeyState.Release:
+                KeyStates[(Key)key] = false;
+                KeysReleased[(Key)key] = true;
+                break;
+            case GLFW.KeyState.Press:
+                KeyStates[(Key)key] = true;
+                KeysPressed[(Key)key] = true;
+                break;
+        }
     }
 
 
@@ -102,13 +123,26 @@ internal class GLFWInputWrapper : IInput
     public bool IsDown(MouseButton button)
         => MouseButtons[button];
 
+    private Dictionary<MouseButton, bool> MouseButtonPressed { get; } = new();
+    public bool IsPressed(MouseButton button)
+        => MouseButtonPressed[button];
+    private Dictionary<MouseButton, bool> MouseButtonReleased { get; } = new();
+    public bool IsReleased(MouseButton button)
+        => MouseButtonReleased[button];
+
     private void MouseButtonInput(GLFW.WindowRef window, GLFW.MouseButton button, GLFW.KeyState keystate, int mods)
     {
-        MouseButtons[(MouseButton)button] = keystate switch
+        switch (keystate)
         {
-            GLFW.KeyState.Release => false,
-            _ => true
-        };
+            case GLFW.KeyState.Release:
+                MouseButtons[(MouseButton)button] = false;
+                MouseButtonReleased[(MouseButton)button] = true;
+                break;
+            case GLFW.KeyState.Press:
+                MouseButtons[(MouseButton)button] = true;
+                MouseButtonPressed[(MouseButton)button] = true;
+                break;
+        }
     }
 
 
@@ -162,5 +196,17 @@ internal class GLFWInputWrapper : IInput
         RawMouseDelta = Vector2.Zero;
         MousePixelDelta = Vector2.Zero;
         ScrollDelta = Vector2.Zero;
+
+        foreach (var (k, _) in KeysPressed)
+        {
+            KeysPressed[k] = false;
+            KeysReleased[k] = false;
+        }
+
+        foreach (var (b, _) in MouseButtonPressed)
+        {
+            MouseButtonPressed[b] = false;
+            MouseButtonReleased[b] = false;
+        }
     }
 }

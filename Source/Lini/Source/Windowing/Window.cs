@@ -11,35 +11,35 @@ public class Window
     // private Vector2 LastWindowSize;
     // private Vector2 LastWindowPos;
 
-    internal GLFW.WindowRef Ref { get; init; }
+    private GLFW.WindowRef Ref { get; init; }
     internal GLFWInputWrapper Input { get; init; }
 
 
     private static GLFW.WindowRef? Context { get; set; } = null;
 
-    // private bool _IsFullscreen;
-    // public bool IsFullscreen
-    // {
-    //     get => _IsFullscreen;
-    //     set
-    //     {
-    //         if (_IsFullscreen == value)
-    //             return;
+    private bool _IsFullscreen;
+    public bool IsFullscreen
+    {
+        get => _IsFullscreen;
+        set
+        {
+            if (_IsFullscreen == value)
+                return;
 
-    //         if (_IsFullscreen)
-    //         {
-    //             var monitor = GLFW.GetPrimaryMonitor();
-    //             var video = GLFW.GetVideoMode(monitor);
-    //             GLFW.SetWindowMonitor(Ref, monitor, 0, 0, video.Width, video.Height, video.RefreshRate);
-    //         }
-    //         else
-    //         {
+            if (_IsFullscreen)
+            {
+                var monitor = GLFW.GetPrimaryMonitor();
+                var video = GLFW.GetVideoMode(monitor);
+                GLFW.SetWindowMonitor(Ref, monitor, 0, 0, video.Width, video.Height, video.RefreshRate);
+            }
+            else
+            {
+                GLFW.SetWindowMonitor(Ref, GLFW.MonitorRef.Null, 0, 0, 0, 0, 0);
+            }
 
-    //         }
-
-    //         _IsFullscreen = value;
-    //     }
-    // }
+            _IsFullscreen = value;
+        }
+    }
 
     private Window(GLFW.WindowRef r)
     {
@@ -57,7 +57,9 @@ public class Window
         GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, 0);
         GLFW.WindowHint(GLFW.WindowHintType.Samples, 4);
 
-        var reference = GLFW.CreateWindow(info.Width, info.Height, info.Title, info.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, 0);
+        GLFW.WindowRef contextShare = (GLFW.WindowRef)(Context is null ? GLFW.WindowRef.Null : Context);
+
+        var reference = GLFW.CreateWindow(info.Width, info.Height, info.Title, info.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, contextShare);
         if (reference.Raw == 0)
             return false;
 
@@ -80,5 +82,8 @@ public class Window
         RenderThread.Do(() => GLFW.SwapBuffers(Ref));
         Input.Reset();
     }
+
+    public bool ReceivedCloseMessage()
+        => GLFW.WindowShouldClose(Ref);
 
 }
