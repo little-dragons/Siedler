@@ -1,4 +1,5 @@
 using System.Numerics;
+using Lini;
 using Lini.Graph;
 using Lini.Graph.Components;
 using Lini.Windowing.Input;
@@ -34,5 +35,13 @@ public struct CameraMover : IComponent
             var transformedDirection = Vector3.Transform(direction / direction.Length(), Entity.Transform.Rotation);
             Entity.Transform.Position += transformedDirection * Speed * args.DeltaTime;
         }
+
+        if (args.Input.IsPressed(Key.Space))
+            if (Sam.Window.IsFullscreen)
+            {
+                Sam.Window.MakeWindow((200, 200), (800, 800), 60);
+            }
+            else
+                Sam.Window.MakeFullscreen();
     }
 }

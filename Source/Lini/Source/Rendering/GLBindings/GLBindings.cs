@@ -245,4 +245,10 @@ internal static partial class GL
     {
         PixelStorefInstance(pname, value);
     }
+
+    internal static void Viewport(int x, int y, int w, int h)
+    {
+        ViewportInstance(x, y, w, h);
+    }
+
 }

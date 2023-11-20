@@ -361,6 +361,19 @@ internal static class GLFW
     [DllImport(LibName, EntryPoint = "glfwRawMouseMotionSupported")]
     internal static extern bool RawMouseMotionSupported();
 
+    
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate void WindowSizeFun(WindowRef window, int width, int height);    
+    [DllImport(LibName, EntryPoint = "glfwSetWindowSizeCallback")]
+    internal static extern IntPtr SetWindowSizeCallback(WindowRef window, WindowSizeFun callback);
+    
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    internal delegate void FramebufferSizeFun(WindowRef window, int width, int height);    
+    [DllImport(LibName, EntryPoint = "glfwSetFramebufferSizeCallback")]
+    internal static extern IntPtr SetFramebufferSizeCallback(WindowRef window, FramebufferSizeFun callback);
+
+
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct VideoMode
     {

@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Lini.Miscellaneous;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
 using Lini.Windowing.Input;
@@ -8,43 +7,36 @@ namespace Lini.Windowing;
 
 public class Window
 {
-    // private Vector2 LastWindowSize;
-    // private Vector2 LastWindowPos;
-
     private GLFW.WindowRef Ref { get; init; }
     internal GLFWInputWrapper Input { get; init; }
 
 
     private static GLFW.WindowRef? Context { get; set; } = null;
 
-    private bool _IsFullscreen;
-    public bool IsFullscreen
+    public bool IsFullscreen { get; private set; }
+    public void MakeFullscreen()
     {
-        get => _IsFullscreen;
-        set
-        {
-            if (_IsFullscreen == value)
-                return;
-
-            if (_IsFullscreen)
-            {
-                var monitor = GLFW.GetPrimaryMonitor();
-                var video = GLFW.GetVideoMode(monitor);
-                GLFW.SetWindowMonitor(Ref, monitor, 0, 0, video.Width, video.Height, video.RefreshRate);
-            }
-            else
-            {
-                GLFW.SetWindowMonitor(Ref, GLFW.MonitorRef.Null, 0, 0, 0, 0, 0);
-            }
-
-            _IsFullscreen = value;
-        }
+        var monitor = GLFW.GetPrimaryMonitor();
+        var video = GLFW.GetVideoMode(monitor);
+        GLFW.SetWindowMonitor(Ref, monitor, 0, 0, video.Width, video.Height, video.RefreshRate);
+        IsFullscreen = true;
     }
 
-    private Window(GLFW.WindowRef r)
+    public void MakeWindow((int, int) position, (int, int) dimension, int refreshRate)
+    {
+        GLFW.SetWindowMonitor(Ref, GLFW.MonitorRef.Null, position.Item1, position.Item2, dimension.Item1, dimension.Item2, refreshRate);
+        IsFullscreen = false;
+    }
+
+    private Window(GLFW.WindowRef r, bool isFullscreen)
     {
         Ref = r;
         Input = new(r);
+        IsFullscreen = isFullscreen;
+
+        GLFW.SetFramebufferSizeCallback(Ref, (_, w, h) => {
+            RenderThread.Do(() => GL.Viewport(0, 0, w, h));
+        });
     }
 
     public static bool TryMake(WindowInfo info, [NotNullWhen(true)] out Window? window)
@@ -71,12 +63,13 @@ public class Window
                 GLFW.MakeContextCurrent(reference);
                 GL.Load(GLFW.GetProcAddress);
             });
+            RenderThread.Finish();
         }
 
         if (GLFW.RawMouseMotionSupported())
             GLFW.SetInputMode(reference, GLFW.InputMode.RawMouseMotion, true);
 
-        window = new(reference);
+        window = new(reference, info.FullScreen);
         return true;
     }
 
