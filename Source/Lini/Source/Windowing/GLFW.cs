@@ -72,6 +72,12 @@ internal static class GLFW
         LockKeyMods = 0x00033004,
         RawMouseMotion = 0x00033005,
     }
+    internal enum InputValue
+    {
+        CursorDisabled = 0x00034003,
+        CursorHidden = 0x00034002,
+        CursorNormal = 0x00034001,
+    }
 
     internal enum WindowAttributeType
     {
@@ -260,6 +266,8 @@ internal static class GLFW
 
     [DllImport(LibName, EntryPoint = "glfwSetInputMode")]
     internal static extern void SetInputMode(WindowRef window, InputMode mode, bool value);
+    [DllImport(LibName, EntryPoint = "glfwSetInputMode")]
+    internal static extern void SetInputMode(WindowRef window, InputMode mode, InputValue value);
 
 
     [DllImport(LibName, EntryPoint = "glfwPollEvents")]
@@ -361,14 +369,16 @@ internal static class GLFW
     [DllImport(LibName, EntryPoint = "glfwRawMouseMotionSupported")]
     internal static extern bool RawMouseMotionSupported();
 
-    
+    [DllImport(LibName, EntryPoint = "glfwDestroyWindow")]
+    internal static extern void DestroyWindow(WindowRef window);
+
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-    internal delegate void WindowSizeFun(WindowRef window, int width, int height);    
+    internal delegate void WindowSizeFun(WindowRef window, int width, int height);
     [DllImport(LibName, EntryPoint = "glfwSetWindowSizeCallback")]
     internal static extern IntPtr SetWindowSizeCallback(WindowRef window, WindowSizeFun callback);
-    
+
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-    internal delegate void FramebufferSizeFun(WindowRef window, int width, int height);    
+    internal delegate void FramebufferSizeFun(WindowRef window, int width, int height);
     [DllImport(LibName, EntryPoint = "glfwSetFramebufferSizeCallback")]
     internal static extern IntPtr SetFramebufferSizeCallback(WindowRef window, FramebufferSizeFun callback);
 

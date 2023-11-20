@@ -43,5 +43,17 @@ public struct CameraMover : IComponent
             }
             else
                 Sam.Window.MakeFullscreen();
+
+        if (args.Input.IsPressed(Key.RightControl))
+        {
+            Sam.Window.LockCursor();
+        }
+
+        if (Sam.Window.IsFullscreen)
+        {
+            Console.WriteLine(args.Input.MousePixelDelta);
+            Console.WriteLine(args.Input.RawMouseDelta);
+            Console.WriteLine("----");
+        }
     }
 }

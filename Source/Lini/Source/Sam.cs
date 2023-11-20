@@ -51,7 +51,8 @@ public static class Sam
 
         RenderThread.Do(() =>
         {
-            GL.DebugProc callback = (s, t, id, sev, message) =>
+            // making this a local function prevents garbage collection
+            static void GLCallback(DebugSource s, DebugType t, uint id, DebugSeverity sev, string message)
             {
                 Logger.Level level = sev switch
                 {
@@ -61,12 +62,12 @@ public static class Sam
                 };
 
                 Logger.Write(level, $"ID {id}. {message}", Logger.Source.GLCallback);
-            };
+            }
 
 
             GL.Enable(EnableCap.DebugOutput);
 
-            GL.DebugMessageCallback(callback);
+            GL.DebugMessageCallback(GLCallback);
             GL.DebugMessageInsert(DebugSource.Application, DebugType.Marker, 0, DebugSeverity.Notification, "Test message injected.");
             GL.Enable(EnableCap.Multisample);
             GL.ClearColor(1.0f, 0.5f, 0.2f, 1.0f);
@@ -95,6 +96,9 @@ public static class Sam
         // GLFW termination requires that a context is only current on the main thread.
         RenderThread.Do(() => GLFW.MakeContextCurrent(GLFW.WindowRef.Null));
         RenderThread.FinishAndTerminate();
+
+        Window.Dispose();
+        Window = null!;
 
         GLFW.Terminate();
 

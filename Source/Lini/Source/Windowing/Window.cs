@@ -5,7 +5,7 @@ using Lini.Windowing.Input;
 
 namespace Lini.Windowing;
 
-public class Window
+public sealed class Window : IDisposable
 {
     private GLFW.WindowRef Ref { get; init; }
     internal GLFWInputWrapper Input { get; init; }
@@ -34,7 +34,8 @@ public class Window
         Input = new(r);
         IsFullscreen = isFullscreen;
 
-        GLFW.SetFramebufferSizeCallback(Ref, (_, w, h) => {
+        GLFW.SetFramebufferSizeCallback(Ref, (_, w, h) =>
+        {
             RenderThread.Do(() => GL.Viewport(0, 0, w, h));
         });
     }
@@ -49,7 +50,7 @@ public class Window
         GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, 0);
         GLFW.WindowHint(GLFW.WindowHintType.Samples, 4);
 
-        GLFW.WindowRef contextShare = (GLFW.WindowRef)(Context is null ? GLFW.WindowRef.Null : Context);
+        GLFW.WindowRef contextShare = Context is null ? GLFW.WindowRef.Null : Context.Value;
 
         var reference = GLFW.CreateWindow(info.Width, info.Height, info.Title, info.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, contextShare);
         if (reference.Raw == 0)
@@ -66,8 +67,8 @@ public class Window
             RenderThread.Finish();
         }
 
-        if (GLFW.RawMouseMotionSupported())
-            GLFW.SetInputMode(reference, GLFW.InputMode.RawMouseMotion, true);
+        // if (GLFW.RawMouseMotionSupported())
+        //     GLFW.SetInputMode(reference, GLFW.InputMode.RawMouseMotion, true);
 
         window = new(reference, info.FullScreen);
         return true;
@@ -79,7 +80,18 @@ public class Window
         Input.Reset();
     }
 
+    public void LockCursor() {
+        GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorDisabled);
+    }
+    public void UnlockCursor() {
+        GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorNormal);
+    }
+
     public bool ReceivedCloseMessage()
         => GLFW.WindowShouldClose(Ref);
 
+    public void Dispose()
+    {
+        GLFW.DestroyWindow(Ref);
+    }
 }
