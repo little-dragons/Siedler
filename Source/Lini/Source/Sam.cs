@@ -9,7 +9,7 @@ namespace Lini;
 
 public static class Sam
 {
-    public static Window Window { get; private set; } = null!;
+    private static Window Window { get; set; } = null!;
     public static bool IsInitialized { get; private set; } = false;
     public static Version Version => new(0, 0, 1);
 
@@ -46,7 +46,7 @@ public static class Sam
             return IsInitialized;
         }
         Window = w;
-        
+
 
 
         RenderThread.Do(() =>
@@ -99,6 +99,7 @@ public static class Sam
 
         Window.Dispose();
         Window = null!;
+        Window.Terminate();
 
         GLFW.Terminate();
 
@@ -120,8 +121,12 @@ public static class Sam
         {
             GLFW.PollEvents();
 
-            UpdateArgs args = new(0.16f, Window.Input);
+            UpdateArgs args = new(0.16f, Window.Input)
+            {
+                WindowInfo = Window.Info
+            };
             scene.UpdateAll(args);
+            Window.Apply(args.WindowInfo);
 
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
             RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));

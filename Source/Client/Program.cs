@@ -15,7 +15,7 @@ Run();
 
 static void Run()
 {
-    WindowInfo info = new("Lini", 800, 800, false);
+    WindowInfo info = new("Lini", (800, 800), 60, new(new WindowedInfo(null)), false);
 
     Sam.Initialize(info);
 

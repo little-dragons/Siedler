@@ -260,6 +260,9 @@ internal static class GLFW
 
     [DllImport(LibName, EntryPoint = "glfwCreateWindow")]
     internal static extern WindowRef CreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, MonitorRef monitor, WindowRef share);
+    internal static WindowRef CreateWindow((int, int) dimension, string title, MonitorRef monitor, WindowRef share) {
+        return CreateWindow(dimension.Item1, dimension.Item2, title, monitor, share);
+    }
 
     [DllImport(LibName, EntryPoint = "glfwWindowShouldClose")]
     internal static extern bool WindowShouldClose(WindowRef window);
@@ -278,6 +281,13 @@ internal static class GLFW
 
     [DllImport(LibName, EntryPoint = "glfwWindowHint")]
     internal static extern void WindowHint(WindowHintType hint, WindowValue value);
+
+    
+    [DllImport(LibName, EntryPoint = "glfwSetWindowPos")]
+    internal static extern void SetWindowPos(WindowRef window, int xpos, int ypos);
+
+    internal static void SetWindowPos(WindowRef window, (int, int) position)
+        => SetWindowPos(window, position.Item1, position.Item2);
 
     [DllImport(LibName, EntryPoint = "glfwWindowHint")]
     internal static extern void WindowHint(WindowHintType hint, int value);
@@ -300,6 +310,14 @@ internal static class GLFW
 
     [DllImport(LibName, EntryPoint = "glfwSetWindowMonitor")]
     internal static extern void SetWindowMonitor(WindowRef window, MonitorRef monitor, int xpos, int ypos, int width, int height, int refreshRate);
+
+    internal static void SetWindowMonitor(WindowRef window, MonitorRef monitor, (int, int) position, (int, int) dimension, int refreshRate)
+    {
+        SetWindowMonitor(window, monitor, position.Item1, position.Item2, dimension.Item1, dimension.Item2, refreshRate);
+    }
+
+    [DllImport(LibName, EntryPoint = "glfwSetWindowTitle")]
+    internal static extern void SetWindowTitle(WindowRef window, [MarshalAs(UnmanagedType.LPStr)] string title);
 
     [DllImport(LibName, EntryPoint = "glfwGetVideoMode")]
     internal static extern ref readonly VideoMode GetVideoMode(MonitorRef monitor);
@@ -381,8 +399,6 @@ internal static class GLFW
     internal delegate void FramebufferSizeFun(WindowRef window, int width, int height);
     [DllImport(LibName, EntryPoint = "glfwSetFramebufferSizeCallback")]
     internal static extern IntPtr SetFramebufferSizeCallback(WindowRef window, FramebufferSizeFun callback);
-
-
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct VideoMode

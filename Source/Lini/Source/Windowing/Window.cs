@@ -5,39 +5,52 @@ using Lini.Windowing.Input;
 
 namespace Lini.Windowing;
 
-public sealed class Window : IDisposable
+internal sealed class Window : IDisposable
 {
     private GLFW.WindowRef Ref { get; init; }
     internal GLFWInputWrapper Input { get; init; }
+    public WindowInfo Info { get; private set; }
 
 
-    private static GLFW.WindowRef? Context { get; set; } = null;
+    private static GLFW.WindowRef? SharedContext { get; set; } = null;
 
-    public bool IsFullscreen { get; private set; }
-    public void MakeFullscreen()
+
+
+    /// <summary>
+    /// This method may only be called from the main thread.
+    /// </summary>
+    internal void Apply(WindowInfo targetInfo)
     {
-        var monitor = GLFW.GetPrimaryMonitor();
-        var video = GLFW.GetVideoMode(monitor);
-        GLFW.SetWindowMonitor(Ref, monitor, 0, 0, video.Width, video.Height, video.RefreshRate);
-        IsFullscreen = true;
+        if (targetInfo.IsFullscreen && targetInfo.FullscreenOptions.First != Info.FullscreenOptions.First)
+        {
+            var monitor = GLFW.GetPrimaryMonitor();
+            var i = targetInfo.FullscreenOptions.First;
+            GLFW.SetWindowMonitor(Ref, monitor, (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
+        }
+        else if (!targetInfo.IsFullscreen && targetInfo.FullscreenOptions.Second != Info.FullscreenOptions.Second)
+        {
+            var i = targetInfo.FullscreenOptions.Second!;
+            GLFW.SetWindowMonitor(Ref, GLFW.MonitorRef.Null, i.Position ?? (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
+        }
+        if (targetInfo.CursorLocked != Info.CursorLocked)
+        {
+            if (targetInfo.CursorLocked)
+                GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorDisabled);
+            else
+                GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorNormal);
+        }
+        if (targetInfo.Title != Info.Title)
+            GLFW.SetWindowTitle(Ref, targetInfo.Title);
+
+        Info = targetInfo;
     }
 
-    public void MakeWindow((int, int) position, (int, int) dimension, int refreshRate)
-    {
-        GLFW.SetWindowMonitor(Ref, GLFW.MonitorRef.Null, position.Item1, position.Item2, dimension.Item1, dimension.Item2, refreshRate);
-        IsFullscreen = false;
-    }
 
-    private Window(GLFW.WindowRef r, bool isFullscreen)
+    private Window(GLFW.WindowRef r, WindowInfo info)
     {
         Ref = r;
         Input = new(r);
-        IsFullscreen = isFullscreen;
-
-        GLFW.SetFramebufferSizeCallback(Ref, (_, w, h) =>
-        {
-            RenderThread.Do(() => GL.Viewport(0, 0, w, h));
-        });
+        Info = info;
     }
 
     public static bool TryMake(WindowInfo info, [NotNullWhen(true)] out Window? window)
@@ -50,15 +63,24 @@ public sealed class Window : IDisposable
         GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, 0);
         GLFW.WindowHint(GLFW.WindowHintType.Samples, 4);
 
-        GLFW.WindowRef contextShare = Context is null ? GLFW.WindowRef.Null : Context.Value;
+        GLFW.WindowRef contextShare = SharedContext is null ? GLFW.WindowRef.Null : SharedContext.Value;
 
-        var reference = GLFW.CreateWindow(info.Width, info.Height, info.Title, info.FullScreen ? GLFW.GetPrimaryMonitor() : GLFW.MonitorRef.Null, contextShare);
+        var reference = info.IsFullscreen switch
+        {
+            true => GLFW.CreateWindow(info.Resolution, info.Title, GLFW.GetPrimaryMonitor(), contextShare),
+            false => GLFW.CreateWindow(info.Resolution, info.Title, GLFW.MonitorRef.Null, contextShare)
+        };
+
         if (reference.Raw == 0)
             return false;
 
-        if (Context is null)
+        if (info.FullscreenOptions.Second?.Position is not null)
+            GLFW.SetWindowPos(reference, ((int, int))info.FullscreenOptions.Second.Position);
+
+
+        if (SharedContext is null)
         {
-            Context = reference;
+            SharedContext = reference;
             RenderThread.Do(() =>
             {
                 GLFW.MakeContextCurrent(reference);
@@ -67,10 +89,15 @@ public sealed class Window : IDisposable
             RenderThread.Finish();
         }
 
+        GLFW.SetFramebufferSizeCallback(reference, (_, w, h) =>
+        {
+            RenderThread.Do(() => GL.Viewport(0, 0, w, h));
+        });
+
         // if (GLFW.RawMouseMotionSupported())
         //     GLFW.SetInputMode(reference, GLFW.InputMode.RawMouseMotion, true);
 
-        window = new(reference, info.FullScreen);
+        window = new(reference, info);
         return true;
     }
 
@@ -80,18 +107,16 @@ public sealed class Window : IDisposable
         Input.Reset();
     }
 
-    public void LockCursor() {
-        GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorDisabled);
-    }
-    public void UnlockCursor() {
-        GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorNormal);
-    }
-
     public bool ReceivedCloseMessage()
         => GLFW.WindowShouldClose(Ref);
 
     public void Dispose()
     {
         GLFW.DestroyWindow(Ref);
+    }
+
+    internal static void Terminate()
+    {
+        SharedContext = null;
     }
 }

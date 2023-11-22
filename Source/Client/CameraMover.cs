@@ -2,6 +2,7 @@ using System.Numerics;
 using Lini;
 using Lini.Graph;
 using Lini.Graph.Components;
+using Lini.Windowing;
 using Lini.Windowing.Input;
 
 namespace Client;
@@ -37,19 +38,15 @@ public struct CameraMover : IComponent
         }
 
         if (args.Input.IsPressed(Key.Space))
-            if (Sam.Window.IsFullscreen)
-            {
-                Sam.Window.MakeWindow((200, 200), (800, 800), 60);
-            }
+            if (args.WindowInfo.IsFullscreen)
+                args.WindowInfo = args.WindowInfo with { FullscreenOptions = new(new WindowedInfo(null)), Resolution = (800, 800) };
             else
-                Sam.Window.MakeFullscreen();
+                args.WindowInfo = args.WindowInfo with { FullscreenOptions = new(new FullscreenInfo()), Resolution = (2560, 1440) };
 
         if (args.Input.IsPressed(Key.RightControl))
-        {
-            Sam.Window.LockCursor();
-        }
+            args.WindowInfo = args.WindowInfo with { CursorLocked = !args.WindowInfo.CursorLocked };
 
-        if (Sam.Window.IsFullscreen)
+        if (args.WindowInfo.IsFullscreen)
         {
             Console.WriteLine(args.Input.MousePixelDelta);
             Console.WriteLine(args.Input.RawMouseDelta);
