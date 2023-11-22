@@ -9,7 +9,7 @@ using Lini.Rendering.GLBindings;
 using Lini.Windowing;
 
 Run();
-// Run();
+Run();
 
 
 

@@ -16,7 +16,7 @@ public static class Sam
     public static bool Initialize(WindowInfo winInfo)
     {
         if (IsInitialized)
-            return IsInitialized;
+            return true;
 
         Logger.Info($"Initializing Lini engine {Version}. Hi!", Logger.Source.MainThread);
 
@@ -26,24 +26,13 @@ public static class Sam
         Thread.CurrentThread.Name = "MainThread";
         RenderThread.Initialize();
 
-        Logger.Info($"Using version {GLFW.GetVersion()}.", Logger.Source.GLFW);
+        if (!Window.Manager.Initialize())
+            return false;
 
-        if (!GLFW.Init())
-        {
-            Logger.Info("GLFW failed to initialize, aborting.", Logger.Source.GLFW);
-            return IsInitialized;
-        }
-
-
-        GLFW.SetErrorCallback((ec, str) =>
-        {
-            Logger.Error($"{ec} - {str}", Logger.Source.GLFWCallback);
-        });
-
-        if (!Window.TryMake(winInfo, out Window? w))
+        if (!Window.Manager.TryMake(winInfo, out Window? w))
         {
             Logger.Error("Could not make window, aborting.", Logger.Source.GLFW);
-            return IsInitialized;
+            return false;
         }
         Window = w;
 
@@ -93,15 +82,13 @@ public static class Sam
         SharedObjects.Terminate();
         ComponentReflection.Terminate();
 
-        // GLFW termination requires that a context is only current on the main thread.
-        RenderThread.Do(() => GLFW.MakeContextCurrent(GLFW.WindowRef.Null));
-        RenderThread.FinishAndTerminate();
 
-        Window.Dispose();
+        Window.Manager.Kill(Window);
         Window = null!;
-        Window.Terminate();
 
-        GLFW.Terminate();
+        Window.Manager.Terminate();
+
+        RenderThread.FinishAndTerminate();
 
         IsInitialized = false;
         Logger.Info("Exiting Lini engine. Goodbye.", Logger.Source.MainThread);

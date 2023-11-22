@@ -5,15 +5,12 @@ using Lini.Windowing.Input;
 
 namespace Lini.Windowing;
 
-internal sealed class Window : IDisposable
+internal sealed partial class Window
 {
-    private GLFW.WindowRef Ref { get; init; }
-    internal GLFWInputWrapper Input { get; init; }
+    internal GLFW.WindowRef Handle { get; init; }
+    private GLFWInputWrapper InputHandler { get; init; }
+    public IInput Input => InputHandler;
     public WindowInfo Info { get; private set; }
-
-
-    private static GLFW.WindowRef? SharedContext { get; set; } = null;
-
 
 
     /// <summary>
@@ -24,36 +21,41 @@ internal sealed class Window : IDisposable
         if (targetInfo.IsFullscreen && targetInfo.FullscreenOptions.First != Info.FullscreenOptions.First)
         {
             var monitor = GLFW.GetPrimaryMonitor();
-            var i = targetInfo.FullscreenOptions.First;
-            GLFW.SetWindowMonitor(Ref, monitor, (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
+            GLFW.SetWindowMonitor(Handle, monitor, (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
         }
         else if (!targetInfo.IsFullscreen && targetInfo.FullscreenOptions.Second != Info.FullscreenOptions.Second)
         {
             var i = targetInfo.FullscreenOptions.Second!;
-            GLFW.SetWindowMonitor(Ref, GLFW.MonitorRef.Null, i.Position ?? (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
+            GLFW.SetWindowMonitor(Handle, GLFW.MonitorRef.Null, i.Position ?? (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
         }
         if (targetInfo.CursorLocked != Info.CursorLocked)
         {
             if (targetInfo.CursorLocked)
-                GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorDisabled);
+                GLFW.SetInputMode(Handle, GLFW.InputMode.Cursor, GLFW.InputValue.CursorDisabled);
             else
-                GLFW.SetInputMode(Ref, GLFW.InputMode.Cursor, GLFW.InputValue.CursorNormal);
+                GLFW.SetInputMode(Handle, GLFW.InputMode.Cursor, GLFW.InputValue.CursorNormal);
         }
         if (targetInfo.Title != Info.Title)
-            GLFW.SetWindowTitle(Ref, targetInfo.Title);
+            GLFW.SetWindowTitle(Handle, targetInfo.Title);
 
         Info = targetInfo;
+    }
+
+    internal void FinishFrame()
+    {
+        RenderThread.Do(() => GLFW.SwapBuffers(Handle));
+        InputHandler.Reset();
     }
 
 
     private Window(GLFW.WindowRef r, WindowInfo info)
     {
-        Ref = r;
-        Input = new(r);
+        Handle = r;
+        InputHandler = new(r);
         Info = info;
     }
 
-    public static bool TryMake(WindowInfo info, [NotNullWhen(true)] out Window? window)
+    private static bool TryMake(WindowInfo info, GLFW.WindowRef shared, [NotNullWhen(true)] out Window? window)
     {
         window = null;
 
@@ -63,33 +65,22 @@ internal sealed class Window : IDisposable
         GLFW.WindowHint(GLFW.WindowHintType.ContextVersionMinor, 0);
         GLFW.WindowHint(GLFW.WindowHintType.Samples, 4);
 
-        GLFW.WindowRef contextShare = SharedContext is null ? GLFW.WindowRef.Null : SharedContext.Value;
 
-        var reference = info.IsFullscreen switch
+        var handle = info.IsFullscreen switch
         {
-            true => GLFW.CreateWindow(info.Resolution, info.Title, GLFW.GetPrimaryMonitor(), contextShare),
-            false => GLFW.CreateWindow(info.Resolution, info.Title, GLFW.MonitorRef.Null, contextShare)
+            true => GLFW.CreateWindow(info.Resolution, info.Title, GLFW.GetPrimaryMonitor(), shared),
+            false => GLFW.CreateWindow(info.Resolution, info.Title, GLFW.MonitorRef.Null, shared)
         };
 
-        if (reference.Raw == 0)
+        if (handle.Raw == 0)
             return false;
 
         if (info.FullscreenOptions.Second?.Position is not null)
-            GLFW.SetWindowPos(reference, ((int, int))info.FullscreenOptions.Second.Position);
+            GLFW.SetWindowPos(handle, ((int, int))info.FullscreenOptions.Second.Position);
 
 
-        if (SharedContext is null)
-        {
-            SharedContext = reference;
-            RenderThread.Do(() =>
-            {
-                GLFW.MakeContextCurrent(reference);
-                GL.Load(GLFW.GetProcAddress);
-            });
-            RenderThread.Finish();
-        }
 
-        GLFW.SetFramebufferSizeCallback(reference, (_, w, h) =>
+        GLFW.SetFramebufferSizeCallback(handle, (_, w, h) =>
         {
             RenderThread.Do(() => GL.Viewport(0, 0, w, h));
         });
@@ -97,26 +88,15 @@ internal sealed class Window : IDisposable
         // if (GLFW.RawMouseMotionSupported())
         //     GLFW.SetInputMode(reference, GLFW.InputMode.RawMouseMotion, true);
 
-        window = new(reference, info);
+        window = new(handle, info);
         return true;
     }
 
-    internal void FinishFrame()
-    {
-        RenderThread.Do(() => GLFW.SwapBuffers(Ref));
-        Input.Reset();
-    }
-
     public bool ReceivedCloseMessage()
-        => GLFW.WindowShouldClose(Ref);
+        => GLFW.WindowShouldClose(Handle);
 
-    public void Dispose()
+    private void Free()
     {
-        GLFW.DestroyWindow(Ref);
-    }
-
-    internal static void Terminate()
-    {
-        SharedContext = null;
+        GLFW.DestroyWindow(Handle);
     }
 }
