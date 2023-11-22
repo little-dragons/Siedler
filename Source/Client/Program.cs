@@ -9,7 +9,7 @@ using Lini.Rendering.GLBindings;
 using Lini.Windowing;
 
 Run();
-Run();
+// Run();
 
 
 
@@ -62,6 +62,6 @@ static void Run()
 
     Sam.Run(scene);
 
-    Sam.Terminate();
+    // Sam.Terminate();
     Sam.Terminate();
 }

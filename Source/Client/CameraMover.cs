@@ -38,15 +38,15 @@ public struct CameraMover : IComponent
         }
 
         if (args.Input.IsPressed(Key.Space))
-            if (args.WindowInfo.IsFullscreen)
-                args.WindowInfo = args.WindowInfo with { FullscreenOptions = new(new WindowedInfo(null)), Resolution = (800, 800) };
+            if (args.TargetWindowInfo.IsFullscreen)
+                args.TargetWindowInfo = args.TargetWindowInfo with { FullscreenOptions = new(new WindowedInfo(null)), Resolution = (800, 800) };
             else
-                args.WindowInfo = args.WindowInfo with { FullscreenOptions = new(new FullscreenInfo()), Resolution = (2560, 1440) };
+                args.TargetWindowInfo = args.TargetWindowInfo with { FullscreenOptions = new(new FullscreenInfo()), Resolution = (2560, 1440) };
 
         if (args.Input.IsPressed(Key.RightControl))
-            args.WindowInfo = args.WindowInfo with { CursorLocked = !args.WindowInfo.CursorLocked };
+            args.TargetWindowInfo = args.TargetWindowInfo with { CursorLocked = !args.TargetWindowInfo.CursorLocked };
 
-        if (args.WindowInfo.IsFullscreen)
+        if (args.TargetWindowInfo.IsFullscreen)
         {
             Console.WriteLine(args.Input.MousePixelDelta);
             Console.WriteLine(args.Input.RawMouseDelta);

@@ -60,9 +60,16 @@ internal partial class Window
                 // make sure that the command is actually executed before glfw is terminated
                 RenderThread.Finish();
             }
-            
+
             Windows.Clear();
             GLFW.Terminate();
+        }
+
+        /// <summary>
+        /// Polls all pending events and processes them for all active windows.
+        /// </summary>
+        internal static void PollEvents() {
+            GLFW.PollEvents();
         }
 
         /// <summary>

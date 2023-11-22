@@ -55,7 +55,7 @@ public static class Sam
 
         if (!Window.Manager.TryMake(winInfo, out Window? w))
         {
-            Logger.Error("Could not make window, aborting.", Logger.Source.GLFW);
+            Logger.Error("Could not make window, aborting.", Logger.Source.MainThread);
             return false;
         }
         Window = w;
@@ -133,21 +133,23 @@ public static class Sam
 
         while (!Window.ReceivedCloseMessage())
         {
-            GLFW.PollEvents();
+            Window.Manager.PollEvents();
 
-            UpdateArgs args = new(0.16f, Window.Input)
+            UpdateArgs args = new(0.16f, Window.Input, Window.Info)
             {
-                WindowInfo = Window.Info
+                TargetWindowInfo = Window.Info
             };
             scene.UpdateAll(args);
-            Window.Apply(args.WindowInfo);
 
             RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
             RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));
 
             Window.FinishFrame();
-
             RenderThread.Finish();
+
+            // apply only after rendering is done in such a way that each update and render method are called synchronosly.
+            // the next cycle will reflect the changes.
+            Window.Apply(args.TargetWindowInfo);
         }
 
         Logger.Info("Exiting main loop.", Logger.Source.MainThread);
