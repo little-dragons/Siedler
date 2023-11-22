@@ -24,9 +24,6 @@ internal class GLFWInputWrapper : IInput
     /// </summary>
     public GLFW.WindowRef Window { get; init; }
 
-    private bool UsesRawMouse { get; init; }
-
-
     /// <summary>
     /// Constructs a new wrapper by registering callbacks and initialzing all class members.
     /// </summary>
@@ -35,10 +32,6 @@ internal class GLFWInputWrapper : IInput
     public GLFWInputWrapper(GLFW.WindowRef window)
     {
         Window = window;
-
-        UsesRawMouse = GLFW.RawMouseMotionSupported();
-        if (UsesRawMouse)
-            GLFW.SetInputMode(window, GLFW.InputMode.RawMouseMotion, true);
 
         KeyCallback = KeyInput;
         if (GLFW.SetKeyCallback(Window, KeyCallback) != 0)

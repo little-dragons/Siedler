@@ -25,6 +25,7 @@ internal class Program
     }
 
     private ProgramHandle Handle { get; }
+    public bool IsValid => !Handle.IsInvalid;
 
     public Program(IEnumerable<Shader> shaders)
     {

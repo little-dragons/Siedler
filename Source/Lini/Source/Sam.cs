@@ -7,12 +7,33 @@ using Lini.Graph.Components;
 
 namespace Lini;
 
+/// <summary>
+/// The main class through which the Lini engine may be accessed. Before any components from the Lini engine may be accessed,
+/// the engine must be initialized through <see cref="Initialize"/>. The only exceptions are <see cref="Version"/> and 
+/// <see cref="IsInitialized"/>.
+/// </summary>
 public static class Sam
 {
+    /// <summary>
+    /// Currently, the Lini engine only supports a single window.
+    /// </summary>
     private static Window Window { get; set; } = null!;
+
+    /// <summary>
+    /// The value whether the engine is currently initialized.
+    /// </summary>
     public static bool IsInitialized { get; private set; } = false;
+
+    /// <summary>
+    /// The version of the Lini engine.
+    /// </summary>
     public static Version Version => new(0, 0, 1);
 
+    /// <summary>
+    /// This method initializes the engine. Currently, it also creates an empty window according to the given information.
+    /// </summary>
+    /// <param name="winInfo">The information with which the first window may be created.</param>
+    /// <returns>Whether the engine could be successfully initialized.</returns>
     public static bool Initialize(WindowInfo winInfo)
     {
         if (IsInitialized)
@@ -25,6 +46,9 @@ public static class Sam
 
         Thread.CurrentThread.Name = "MainThread";
         RenderThread.Initialize();
+
+        // here starts the part which might really lead to a crash - the rest is pretty much contained in the library
+        // from here on, we rely on external assumptions, e.g. that OpenGL and GLFW are correctly supported.
 
         if (!Window.Manager.Initialize())
             return false;
@@ -73,18 +97,21 @@ public static class Sam
         return IsInitialized;
     }
 
+    /// <summary>
+    /// This method terminates the engine and does cleanup. This function may even be called when initialization is not successful. 
+    /// It might produce warnings because some parts which never have been initialized will be cleanuped but the function will always succeed.
+    /// </summary>
     public static void Terminate()
     {
-        if (!IsInitialized)
-            return;
-
         Logger.Info("Terminating.", Logger.Source.MainThread);
         SharedObjects.Terminate();
         ComponentReflection.Terminate();
 
-
-        Window.Manager.Kill(Window);
-        Window = null!;
+        if (Window is not null)
+        {
+            Window.Manager.Kill(Window);
+            Window = null!;
+        }
 
         Window.Manager.Terminate();
 

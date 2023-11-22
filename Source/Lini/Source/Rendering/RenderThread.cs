@@ -22,6 +22,8 @@ internal static class RenderThread
     private static AutoResetEvent StartThreadEvent = null!;
     private static ManualResetEventSlim WorkDoneEvent = null!;
 
+    public static bool IsRunning { get; private set; } = false;
+
     internal static void Initialize()
     {
         StartThreadEvent = new(false);
@@ -33,6 +35,7 @@ internal static class RenderThread
             Name = "RenderThread"
         };
         Handle.Start();
+        IsRunning = true;
 
         Logger.Info("Started.", Logger.Source.RenderThread);
     }
@@ -44,10 +47,14 @@ internal static class RenderThread
     /// </summary>
     internal static void FinishAndTerminate()
     {
+        if (!IsRunning)
+            return;
+            
         Logger.Info("Terminate command received.", Logger.Source.RenderThread);
         WorkItems.Enqueue(() => ThreadToTerminate = true);
         StartThreadEvent.Set();
         Handle.Join();
+        IsRunning = false;
     }
 
     /// <summary>

@@ -1,23 +1,46 @@
 using System.Diagnostics.CodeAnalysis;
+using Lini.Miscellaneous;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
 using Lini.Windowing.Input;
 
 namespace Lini.Windowing;
 
+/// <summary>
+/// A window wrapper around glfw, providing a nicer interface through <see cref="WindowInfo"/> and <see cref="GLFWInputWrapper"/>. 
+/// To create and destroy windows, see <see cref="Manager"/>.
+/// </summary>
 internal sealed partial class Window
 {
-    internal GLFW.WindowRef Handle { get; init; }
+    /// <summary>
+    /// The handle of the window: after being destroyed, the handle is set to 0, marking this object as invalid.
+    /// </summary>
+    private GLFW.WindowRef Handle { get; set; }
+
+    /// <summary>
+    /// A wrapper around the glfw callbacks. It provides input for this window only.
+    /// Since such a native wrapper should not be exposed directly, it can be accessed via <see cref="Input"/>.
+    /// </summary>
     private GLFWInputWrapper InputHandler { get; init; }
+
+    /// <summary>
+    /// A wrapper to access the input presented since the last <see cref="FinishFrame"/>.
+    /// </summary>
     public IInput Input => InputHandler;
+
+    /// <summary>
+    /// The current info of the window. This property may be changed only via the <see cref="Apply(WindowInfo)"/> method.
+    /// </summary>
     public WindowInfo Info { get; private set; }
 
 
     /// <summary>
-    /// This method may only be called from the main thread.
+    /// This method may only be called from the main thread and uses many GLFW calls. Depending on what settings are changed,
+    /// this may cause the window to flicker and lag quite a lot.
     /// </summary>
     internal void Apply(WindowInfo targetInfo)
     {
+        WarnIfInvalid();
         if (targetInfo.IsFullscreen && targetInfo.FullscreenOptions.First != Info.FullscreenOptions.First)
         {
             var monitor = GLFW.GetPrimaryMonitor();
@@ -41,13 +64,20 @@ internal sealed partial class Window
         Info = targetInfo;
     }
 
+    /// <summary>
+    /// This method maybe called whenever calculations for a frame are finished: it is going to swap the buffers and do other
+    /// necessary operations like resetting the input.
+    /// </summary>
     internal void FinishFrame()
     {
+        WarnIfInvalid();
         RenderThread.Do(() => GLFW.SwapBuffers(Handle));
         InputHandler.Reset();
     }
 
-
+    /// <summary>
+    /// A private constructor only intended to set properties. Do not directly call this constructor, but call <see cref="TryMake"/>.
+    /// </summary>
     private Window(GLFW.WindowRef r, WindowInfo info)
     {
         Handle = r;
@@ -55,6 +85,14 @@ internal sealed partial class Window
         Info = info;
     }
 
+    /// <summary>
+    /// You may call this method to create a window. Note that it is private so that it can only be called by the embedded class
+    /// <see cref="Manager"/>. To call this method, use <see cref="Manager.TryMake"/>.
+    /// </summary>
+    /// <param name="info">The initial info of this window.</param>
+    /// <param name="shared">Any other window ref whose OpenGL context is going to be shared.</param>
+    /// <param name="window">The result window.</param>
+    /// <returns>True if the window could be created without issue. False if the operation could not be executed as expected.</returns>
     private static bool TryMake(WindowInfo info, GLFW.WindowRef shared, [NotNullWhen(true)] out Window? window)
     {
         window = null;
@@ -92,11 +130,29 @@ internal sealed partial class Window
         return true;
     }
 
+    /// <summary>
+    /// Checks whether this window received a command from the operating system that it may close.
+    /// </summary>
     public bool ReceivedCloseMessage()
-        => GLFW.WindowShouldClose(Handle);
+    {
+        WarnIfInvalid();
+        return GLFW.WindowShouldClose(Handle);
+    }
 
+    /// <summary>
+    /// Deletes and resets the handle of this window. This object may then not be used again. To call this method,
+    /// use <see cref="Manager.Kill"/>.
+    /// </summary>
     private void Free()
     {
+        WarnIfInvalid();
         GLFW.DestroyWindow(Handle);
+        Handle = GLFW.WindowRef.Null;
+    }
+
+    private void WarnIfInvalid()
+    {
+        if (Handle.Raw == 0)
+            Logger.Warn("Tried to access window with invalid handle.", Logger.Source.GLFW);
     }
 }

@@ -25,6 +25,7 @@ internal static class SharedObjects
     internal static void Terminate()
     {
         Logger.Info("Deleting shared GL objects.", Logger.Source.GL);
-        SimpleProgram.Delete();
+        if (!SimpleProgram.IsValid)
+            SimpleProgram.Delete();
     }
 }
