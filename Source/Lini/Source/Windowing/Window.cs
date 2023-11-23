@@ -124,7 +124,7 @@ internal sealed partial class Window
         });
 
         // if (GLFW.RawMouseMotionSupported())
-        //     GLFW.SetInputMode(reference, GLFW.InputMode.RawMouseMotion, true);
+        //     GLFW.SetInputMode(handle, GLFW.InputMode.RawMouseMotion, true);
 
         window = new(handle, info);
         return true;

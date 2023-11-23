@@ -18,8 +18,12 @@ public struct Camera : IComponent
     {
         get
         {
-            Matrix4x4.Invert(Entity.AbsoluteTransform, out var res);
-            return res;
+            Matrix4x4 absolute = Entity.AbsoluteTransform;
+            // Matrix4x4.Invert(absolute, out absolute);
+            Vector3 eye = Vector3.Transform(Vector3.Zero, absolute);
+            Vector3 target = Vector3.Transform(-Vector3.UnitZ, absolute);
+            Vector3 up = Vector3.TransformNormal(Vector3.UnitY, absolute);
+            return Matrix4x4.CreateLookAt(eye, target, up);
         }
     }
 

@@ -18,8 +18,7 @@ public interface IInput
 
 
     public Vector2 ScrollDelta { get; }
-    public Vector2 MousePixelDelta { get; }
-    public Vector2 RawMouseDelta { get; }
+    public Vector2 MouseDelta { get; }
     public Vector2 MousePosition { get; }
 
 

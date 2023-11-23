@@ -165,8 +165,7 @@ internal class GLFWInputWrapper : IInput
 
 
     public Vector2 ScrollDelta { get; private set; }
-    public Vector2 MousePixelDelta { get; private set; }
-    public Vector2 RawMouseDelta { get; private set; }
+    public Vector2 MouseDelta { get; private set; }
     private Vector2 LastMousePosition { get; set; }
     public Vector2 MousePosition { get; private set; }
 
@@ -174,7 +173,7 @@ internal class GLFWInputWrapper : IInput
     private void CursorPosInput(GLFW.WindowRef window, double x, double y)
     {
         MousePosition = new((float)x, (float)y);
-        MousePixelDelta = LastMousePosition - MousePosition;
+        MouseDelta = MousePosition - LastMousePosition;
     }
 
 
@@ -186,8 +185,7 @@ internal class GLFWInputWrapper : IInput
     {
         Text = "";
         LastMousePosition = MousePosition;
-        RawMouseDelta = Vector2.Zero;
-        MousePixelDelta = Vector2.Zero;
+        MouseDelta = Vector2.Zero;
         ScrollDelta = Vector2.Zero;
 
         foreach (var (k, _) in KeysPressed)

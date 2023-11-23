@@ -4,6 +4,7 @@ using Lini.Rendering.GLBindings;
 using Lini.Graph;
 using Lini.Windowing;
 using Lini.Graph.Components;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Lini;
 
@@ -17,11 +18,12 @@ public static class Sam
     /// <summary>
     /// Currently, the Lini engine only supports a single window.
     /// </summary>
-    private static Window Window { get; set; } = null!;
+    private static Window? Window { get; set; } = null;
 
     /// <summary>
     /// The value whether the engine is currently initialized.
     /// </summary>
+    [MemberNotNullWhen(true, nameof(Window))]
     public static bool IsInitialized { get; private set; } = false;
 
     /// <summary>
@@ -110,7 +112,7 @@ public static class Sam
         if (Window is not null)
         {
             Window.Manager.Kill(Window);
-            Window = null!;
+            Window = null;
         }
 
         Window.Manager.Terminate();

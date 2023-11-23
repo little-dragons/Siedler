@@ -37,20 +37,22 @@ public struct CameraMover : IComponent
             Entity.Transform.Position += transformedDirection * Speed * args.DeltaTime;
         }
 
+        if (args.Input.MouseDelta != Vector2.Zero && args.CurrentWindowInfo.CursorLocked)
+        {
+            Vector2 mouseDelta  = args.Input.MouseDelta * 0.000001f;
+            Entity.Transform.Rotation *= Quaternion.CreateFromYawPitchRoll(0.0f, mouseDelta.Y, 0.0f);
+            Entity.Transform.Rotation *= Quaternion.CreateFromYawPitchRoll(-mouseDelta.X, 0.0f, 0.0f);
+            Console.WriteLine(args.Input.MouseDelta);
+        }
+
         if (args.Input.IsPressed(Key.Space))
             if (args.TargetWindowInfo.IsFullscreen)
-                args.TargetWindowInfo = args.TargetWindowInfo with { FullscreenOptions = new(new WindowedInfo(null)), Resolution = (800, 800) };
+                args.TargetWindowInfo = args.TargetWindowInfo with { FullscreenOptions = new(new WindowedInfo((200, 200))), Resolution = (800, 800) };
             else
                 args.TargetWindowInfo = args.TargetWindowInfo with { FullscreenOptions = new(new FullscreenInfo()), Resolution = (2560, 1440) };
 
         if (args.Input.IsPressed(Key.RightControl))
             args.TargetWindowInfo = args.TargetWindowInfo with { CursorLocked = !args.TargetWindowInfo.CursorLocked };
 
-        if (args.TargetWindowInfo.IsFullscreen)
-        {
-            Console.WriteLine(args.Input.MousePixelDelta);
-            Console.WriteLine(args.Input.RawMouseDelta);
-            Console.WriteLine("----");
-        }
     }
 }
