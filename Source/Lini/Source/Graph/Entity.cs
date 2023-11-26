@@ -7,18 +7,13 @@ namespace Lini.Graph;
 public sealed class Entity
 {
     private ComponentList Components { get; init; } = new();
-    private List<ValueTuple<PlainComponentRef, Action<RenderArgs>>> Renderables { get; init; } = new();
+    private List<ValueTuple<PlainComponentRef, Action<RenderArgs>>> Renderables { get; init; } = [];
 
-    public List<Entity> Children { get; init; } = new();
-    public Entity Parent { get; private set; }
+    public List<Entity> Children { get; init; } = [];
+    public Entity? Parent { get; private set; }= null;
 
     private Scene Scene { get; init; }
-
-    internal Entity(Scene scene)
-    {
-        Scene = scene;
-        Parent = null!;
-    }
+    public bool EnableRendering { get; set; } = true;
 
     public Transform Transform = new();
 
@@ -37,7 +32,11 @@ public sealed class Entity
         }
     }
 
-    public bool Enabled { get; set; } = true;
+
+    internal Entity(Scene scene)
+    {
+        Scene = scene;
+    }
 
     public Entity MakeChild()
     {
@@ -47,17 +46,16 @@ public sealed class Entity
         return e;
     }
 
-    public void Delete()
+    public bool DeleteChild(Entity entity)
     {
-        if (Parent is not null && Parent.Children.Remove(this))
+        if (Children.Remove(entity))
         {
-            Parent = null!;
-            foreach (var child in Children)
-                child.Delete();
+            entity.Dispose();
 
-            foreach (var component in Components.AsSpan())
-                Scene.Components.Delete(component);
+            return true;
         }
+
+        return false;
     }
 
 
@@ -105,7 +103,7 @@ public sealed class Entity
 
     internal void Render(RenderArgs args)
     {
-        if (!Enabled)
+        if (!EnableRendering)
             return;
 
         Matrix4x4 entityToWorld = args.Transforms.Peek() * Transform.Matrix;
@@ -118,5 +116,17 @@ public sealed class Entity
             comp.Item2(args);
 
         args.Transforms.Pop();
+    }
+
+
+
+    private void Dispose() {
+        Parent = null;
+
+        foreach (var child in Children)
+            child.Dispose();
+
+        foreach (var component in Components)
+            Scene.Components.Delete(component);
     }
 }

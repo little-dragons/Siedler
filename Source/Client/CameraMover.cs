@@ -37,6 +37,15 @@ public struct CameraMover : IComponent
             Entity.Transform.Position += transformedDirection * Speed * args.DeltaTime;
         }
 
+        float xRot = 0;
+        if (args.Input.IsDown(Key.E))
+            xRot -= 0.004f;
+        if (args.Input.IsDown(Key.Q))
+            xRot += 0.004f;
+
+        if (xRot != 0)
+            Entity.Transform.Rotation *= Quaternion.CreateFromYawPitchRoll(xRot, 0.0f, 0.0f);
+
         if (args.Input.MouseDelta != Vector2.Zero && args.CurrentWindowInfo.CursorLocked)
         {
             Vector2 mouseDelta  = args.Input.MouseDelta * 0.000001f;
