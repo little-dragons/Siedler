@@ -7,13 +7,13 @@ public struct Rectangle
 
     public readonly Point Point3 => new()
     {
-        Offset = new(Point2.Offset.X, Point1.Offset.X),
+        Offset = new(Point2.Offset.X, Point1.Offset.Y),
         Percent = new(Point2.Percent.X, Point1.Percent.Y)
     };
 
     public readonly Point Point4 => new()
     {
-        Offset = new(Point1.Offset.X, Point2.Offset.X),
+        Offset = new(Point1.Offset.X, Point2.Offset.Y),
         Percent = new(Point1.Percent.X, Point2.Percent.Y)
     };
 
