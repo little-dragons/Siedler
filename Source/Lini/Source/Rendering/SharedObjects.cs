@@ -17,7 +17,7 @@ internal static class SharedObjects
         Shader vertexShader = new(ShaderType.Vertex, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleVertex.glsl")));
         Shader fragmentShader = new(ShaderType.Fragment, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleFragment.glsl")));
 
-        SimpleProgram = new(new[] { vertexShader, fragmentShader });
+        SimpleProgram = new([vertexShader, fragmentShader]);
 
         vertexShader.Delete();
         fragmentShader.Delete();
@@ -25,7 +25,7 @@ internal static class SharedObjects
         vertexShader = new(ShaderType.Vertex, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "UIVertex.glsl")));
         fragmentShader = new(ShaderType.Fragment, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "UIFragment.glsl")));
 
-        UIProgram = new(new[] { vertexShader, fragmentShader });
+        UIProgram = new([vertexShader, fragmentShader]);
 
         vertexShader.Delete();
         fragmentShader.Delete();

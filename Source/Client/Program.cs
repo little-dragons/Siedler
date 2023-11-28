@@ -27,8 +27,7 @@ static void Run()
             new() { TextureCoordinates = new(0, 1), Position = new(0.5f, 0.5f, 0.0f) },
             new() { TextureCoordinates = new(1, 1), Position = new(-0.5f, 0.5f, 0.0f) } };
 
-    var indices =
-        new uint[] { 0, 1, 2, 1, 2, 3 };
+    uint[] indices = [0, 1, 2, 1, 2, 3];
 
     Mesh<Vertex> mesh = new(vertices, indices);
     Texture text = new(ImageData.FromFile(Resources.PathFor(Resources.Type.Texture, "pews.png"))!);
