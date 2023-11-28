@@ -1,6 +1,6 @@
 namespace Lini.Rendering;
 
-internal interface IVertex
+public interface IVertex
 {
     /// <summary>
     /// This method sets the vertex array attributes of this instance - since the passed information depends entirely on
