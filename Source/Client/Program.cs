@@ -32,7 +32,7 @@ static void Run()
     Mesh<Vertex> mesh = new(vertices, indices);
     Texture text = new(ImageData.FromFile(Resources.PathFor(Resources.Type.Texture, "pews.png"))!);
 
-    Box buttonBox = new()
+    Rectangle buttonBox = new()
     {
         Point1 = new(),
         Point2 = new()

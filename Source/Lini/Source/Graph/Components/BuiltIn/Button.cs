@@ -11,12 +11,12 @@ public struct Button : IComponent, IRenderableUI
     public static bool RendersUI => true;
     public static bool Renders3D => false;
 
-    public Box Box { get; private set; }
+    public Rectangle Box { get; private set; }
     public Vector4 BackgroundColor { get; set; }
 
     private Mesh<Point> Mesh { get; set; }
 
-    public Button(Box box)
+    public Button(Rectangle box)
     {
         Box = box;
         var vertices = box.ToArray();

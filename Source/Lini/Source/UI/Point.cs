@@ -16,8 +16,6 @@ public struct Point : IVertex
 
     static void IVertex.SetVertexArrayAttributes()
     {
-        SharedObjects.UIProgram.Bind();
-
         GL.EnableVertexAttribArray(0);
         GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Size, PercentOffset);
         

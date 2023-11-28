@@ -1,6 +1,6 @@
 namespace Lini.UI;
 
-public struct Box
+public struct Rectangle
 {
     public required Point Point1 { get; set; }
     public required Point Point2 { get; set; }

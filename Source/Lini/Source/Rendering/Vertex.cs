@@ -15,7 +15,6 @@ public struct Vertex : IVertex
 
     static void IVertex.SetVertexArrayAttributes()
     {
-        SharedObjects.SimpleProgram.Bind();
         GL.EnableVertexAttribArray(0);
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, Size, PositionOffset);
         
