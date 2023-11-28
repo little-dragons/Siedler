@@ -2,14 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace Lini.Graph.Components;
 
-public readonly struct ComponentRef<T> where T : IComponent
+public readonly struct ComponentRef<T>(int index) where T : struct, IComponent
 {
-    public readonly int Index;
-
-    public ComponentRef(int index)
-    {
-        Index = index;
-    }
+    public readonly int Index = index;
 
     public PlainComponentRef Plain =>
         new(Index, T.TypeID);
@@ -17,7 +12,7 @@ public readonly struct ComponentRef<T> where T : IComponent
 
 
 [StructLayout(LayoutKind.Explicit, Size = sizeof(long))]
-public readonly struct PlainComponentRef
+public readonly struct PlainComponentRef(int index, int type)
 {
     // Remember that long is by definition 64 bits
     // and int is, by definition, 32 bits
@@ -27,20 +22,11 @@ public readonly struct PlainComponentRef
     [FieldOffset(0)]
     public readonly long Full;
     [FieldOffset(0)]
-    public readonly int Index;
+    public readonly int Index = index;
     [FieldOffset(sizeof(int))]
-    public readonly int TypeID;
+    public readonly int TypeID = type;
 
-    public PlainComponentRef(int index, int type)
-    {
-        Index = index;
-        TypeID = type;
-    }
-
-    public static PlainComponentRef From<T>(ComponentRef<T> generic) where T : IComponent
-        => new(generic.Index, T.TypeID);
-
-    public bool TryTo<T>(out ComponentRef<T> generic) where T : IComponent
+    public bool TryTo<T>(out ComponentRef<T> generic) where T : struct, IComponent
     {
         if (Index == T.TypeID)
         {

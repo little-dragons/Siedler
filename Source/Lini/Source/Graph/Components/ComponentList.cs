@@ -30,7 +30,7 @@ public struct ComponentList
         return true;
     }
 
-    public readonly bool TryGet<T>(out ComponentRef<T> comp) where T : IComponent
+    public readonly bool TryGet<T>(out ComponentRef<T> comp) where T : struct, IComponent
     {
         foreach (var stored in Array[..Count])
         {

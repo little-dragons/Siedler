@@ -7,10 +7,9 @@ namespace Lini.Graph;
 public sealed class Entity
 {
     private ComponentList Components { get; init; } = new();
-    private List<ValueTuple<PlainComponentRef, Action<RenderArgs>>> Renderables { get; init; } = [];
 
     public List<Entity> Children { get; init; } = [];
-    public Entity? Parent { get; private set; }= null;
+    public Entity? Parent { get; private set; } = null;
 
     private Scene Scene { get; init; }
     public bool EnableRendering { get; set; } = true;
@@ -59,6 +58,13 @@ public sealed class Entity
     }
 
 
+
+    private List<ValueTuple<PlainComponentRef, Action<Render3DArgs>>> Renderables3D { get; init; } = [];
+    private bool HasRenderables3D => Renderables3D.Count > 0 || Children.Any(x => x.HasRenderables3D);
+    private List<ValueTuple<PlainComponentRef, Action<RenderUIArgs>>> RenderablesUI { get; init; } = [];
+    private bool HasRenderablesUI => RenderablesUI.Count > 0 || Children.Any(x => x.HasRenderablesUI);
+
+
     public ref T TryAdd<T>(out bool success, out ComponentRef<T> compRef) where T : struct, IComponent
     {
         ref T comp = ref Scene.Components.New(out compRef);
@@ -70,10 +76,17 @@ public sealed class Entity
         }
 
 
-        if (comp is IRenderable)
+        if (comp is IRenderable3D)
         {
-            var refCopy = compRef;
-            Renderables.Add((compRef.Plain, x => ((IRenderable)Scene.Components.Get(refCopy)).Render(x)));
+            ComponentRef<T> copy = compRef;
+            void renderFun(Render3DArgs x) => ((IRenderable3D)Scene.Components.Get(copy)).Render(x);
+            Renderables3D.Add((compRef.Plain, renderFun));
+        }
+        if (comp is IRenderableUI)
+        {
+            ComponentRef<T> copy = compRef;
+            void renderFun(RenderUIArgs x) => ((IRenderableUI)Scene.Components.Get(copy)).Render(x);
+            RenderablesUI.Add((compRef.Plain, renderFun));
         }
 
         success = true;
@@ -91,36 +104,48 @@ public sealed class Entity
 
     public void Remove<T>(ComponentRef<T> comp) where T : struct, IComponent
     {
-        if (comp is IRenderable)
-        {
-            int i = Renderables.FindIndex(x => x.Item1.Full == comp.Plain.Full);
-            if (i >= 0)
-                Renderables.RemoveAt(i);
-        }
+        if (comp is IRenderable3D)
+            Renderables3D.RemoveAll(x => x.Item1.Full == comp.Plain.Full);
+        if (comp is IRenderableUI)
+            RenderablesUI.RemoveAll(x => x.Item1.Full == comp.Plain.Full);
 
         Components.Free(comp.Plain);
+        Scene.Components.Delete(comp);
     }
 
-    internal void Render(RenderArgs args)
+    internal void Render3D(Render3DArgs args)
     {
-        if (!EnableRendering)
+        if (!EnableRendering || !HasRenderables3D)
             return;
 
         Matrix4x4 entityToWorld = args.Transforms.Peek() * Transform.Matrix;
         args.Transforms.Push(entityToWorld);
 
         foreach (var child in Children)
-            child.Render(args);
+            child.Render3D(args);
 
-        foreach (var comp in Renderables)
+        foreach (var comp in Renderables3D)
             comp.Item2(args);
 
         args.Transforms.Pop();
     }
 
+    internal void RenderUI(RenderUIArgs args)
+    {
+        if (!EnableRendering || !HasRenderablesUI)
+            return;
+
+        foreach (var child in Children)
+            child.RenderUI(args);
+
+        foreach (var comp in RenderablesUI)
+            comp.Item2(args);
+    }
 
 
-    private void Dispose() {
+
+    private void Dispose()
+    {
         Parent = null;
 
         foreach (var child in Children)

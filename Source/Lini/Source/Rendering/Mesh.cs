@@ -2,19 +2,19 @@ using Lini.Rendering.GLBindings;
 
 namespace Lini.Rendering;
 
-public class Mesh
+public class Mesh<T> where T : unmanaged, IVertex
 {
-    public Vertex[] Vertices { get; private set; }
-    public Span<Vertex> VerticesSpan => new(Vertices);
+    public T[] Vertices { get; private set; }
+    public ReadOnlySpan<T> VerticesSpan => new(Vertices);
     public uint[] Indices { get; private set; }
-    public Span<uint> IndicesSpan => new(Indices);
+    public ReadOnlySpan<uint> IndicesSpan => new(Indices);
 
-    internal Buffer<Vertex> VertexBuffer { get; private set; } = default!;
+    internal Buffer<T> VertexBuffer { get; private set; } = default!;
     internal Buffer<uint> IndexBuffer { get; private set; } = default!;
     internal uint VertexArray { get; private set; }
 
 
-    public Mesh(Vertex[] vertices, uint[] indices)
+    public Mesh(T[] vertices, uint[] indices)
     {
         Indices = indices;
         Vertices = vertices;
@@ -32,7 +32,7 @@ public class Mesh
         IndexBuffer = new(BufferTarget.ElementArray, BufferUsage.StaticDraw);
         VertexBuffer.Write(VerticesSpan);
         IndexBuffer.Write(IndicesSpan);
-        Vertex.SetVertexArrayAttributes();
+        T.SetVertexArrayAttributes();
     }
 
     internal void Draw()

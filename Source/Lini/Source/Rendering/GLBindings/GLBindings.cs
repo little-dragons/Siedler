@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Lini.Image;
 
 namespace Lini.Rendering.GLBindings;
 
@@ -84,6 +85,17 @@ internal static partial class GL
     internal static void UseProgram(uint program)
     {
         UseProgramInstance(program);
+    }
+
+    internal static string GetProgramInfoLog(uint program) {
+        GetProgramivInstance(program, ProgramPropertyARB.InfoLogLength, out int len);
+        if (len == 0)
+            return "";
+        IntPtr ptr = Marshal.AllocCoTaskMem(len);
+        GetProgramInfoLogInstance(program, len, out int writtenLen, ptr);
+        string ret = Marshal.PtrToStringAnsi(ptr)!;
+        Marshal.FreeCoTaskMem(ptr);
+        return ret;
     }
 
     internal static void BindBuffer(BufferTarget target, uint buffer)

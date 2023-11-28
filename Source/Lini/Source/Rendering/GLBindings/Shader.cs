@@ -33,6 +33,9 @@ internal class Shader
 
         GL.ShaderSource(Handle.Value, source);
         GL.CompileShader(Handle.Value);
+        string info = GL.GetShaderInfoLog(Handle.Value);
+        if (!string.IsNullOrEmpty(info))
+            Logger.Error(info, Logger.Source.GL);
     }
 
     internal void AttachTo(uint program)

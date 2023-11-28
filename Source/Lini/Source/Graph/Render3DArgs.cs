@@ -3,9 +3,9 @@ using Lini.Rendering.GLBindings;
 
 namespace Lini.Graph;
 
-internal class RenderArgs
+internal class Render3DArgs
 {
-    internal RenderArgs(Program program, double globalTime)
+    public Render3DArgs(Program program, double globalTime)
     {
         Program = program;
         GlobalTime = globalTime;

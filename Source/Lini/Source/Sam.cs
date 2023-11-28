@@ -5,6 +5,7 @@ using Lini.Graph;
 using Lini.Windowing;
 using Lini.Graph.Components;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 
 namespace Lini;
 
@@ -143,8 +144,17 @@ public static class Sam
             };
             scene.UpdateAll(args);
 
-            RenderThread.Do(() => GL.Clear(ClearBufferMask.Color));
-            RenderThread.Do(() => scene.Render(new RenderArgs(SharedObjects.SimpleProgram, 24)));
+            RenderThread.Do(() =>
+            {
+                GL.Clear(ClearBufferMask.Color);
+                SharedObjects.SimpleProgram.Bind();
+                scene.Render3D(new Render3DArgs(SharedObjects.SimpleProgram, 24));
+                
+                SharedObjects.UIProgram.Bind();
+                Vector2 size = new(Window.Info.Resolution.Item1, Window.Info.Resolution.Item2);
+                SharedObjects.UIProgram.SetUniform("windowsize", size);
+                scene.RenderUI(new RenderUIArgs(SharedObjects.UIProgram, 24));
+            });
 
             Window.FinishFrame();
             RenderThread.Finish();

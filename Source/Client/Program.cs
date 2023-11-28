@@ -6,6 +6,7 @@ using Lini.Image;
 using Lini.Miscellaneous;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
+using Lini.UI;
 using Lini.Windowing;
 
 Run();
@@ -29,9 +30,17 @@ static void Run()
     var indices =
         new uint[] { 0, 1, 2, 1, 2, 3 };
 
-    Mesh mesh = new(vertices, indices);
+    Mesh<Vertex> mesh = new(vertices, indices);
     Texture text = new(ImageData.FromFile(Resources.PathFor(Resources.Type.Texture, "pews.png"))!);
 
+    Box buttonBox = new()
+    {
+        Point1 = new(),
+        Point2 = new()
+        {
+            Percent = new(0.5f, 0.5f)
+        }
+    };
 
     Scene scene = new();
     Entity meshEntity = scene.Root.MakeChild();
@@ -58,6 +67,16 @@ static void Run()
 
     scene.ActiveCamera = cameraRef;
 
+
+    Entity buttonEntity = scene.Root.MakeChild();
+    buttonEntity.Add<Button>() = new(buttonBox) {
+        BackgroundColor = new () {
+            X = 1.0f,
+            Y = 0.0f,
+            Z = 0.0f,
+            W = 1.0f,
+        }
+    };
 
 
     Sam.Run(scene);

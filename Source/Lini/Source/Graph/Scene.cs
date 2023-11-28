@@ -17,20 +17,23 @@ public class Scene
         Components = new();
     }
 
-    internal Entity NewEntity() 
+    internal Entity NewEntity()
         => new(this);
-    
+
 
     internal void UpdateAll(UpdateArgs args)
     {
         Components.Update(args);
     }
 
-    internal void Render(RenderArgs args)
+    internal void Render3D(Render3DArgs args)
     {
         args.Program.SetUniform("view", Components.Get(ActiveCamera).ViewMatrix);
         args.Program.SetUniform("projection", Components.Get(ActiveCamera).ProjectionMatrix);
 
-        Root.Render(args);
+        Root.Render3D(args);
     }
+
+    internal void RenderUI(RenderUIArgs args)
+        => Root.RenderUI(args);
 }

@@ -3385,7 +3385,7 @@ internal static partial class GL
 	private delegate void GetAttachedShadersDelegate(uint program, int maxCount, out int count, out uint shaders);
 	private delegate int GetAttribLocationDelegate(uint program, in sbyte name);
 	private delegate void GetProgramivDelegate(uint program, ProgramPropertyARB pname, out int @params);
-	private delegate void GetProgramInfoLogDelegate(uint program, int bufSize, out int length, out sbyte infoLog);
+	private delegate void GetProgramInfoLogDelegate(uint program, int bufSize, out int length, IntPtr infoLog);
 	private delegate void GetShaderivDelegate(uint shader, ShaderParameterName pname, out int @params);
 	private delegate void GetShaderInfoLogDelegate(uint shader, int bufSize, out int length, nint infoLog);
 	private delegate void GetShaderSourceDelegate(uint shader, int bufSize, out int length, out sbyte source);

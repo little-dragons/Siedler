@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Lini.Image;
 using Lini.Miscellaneous;
 
 namespace Lini.Rendering.GLBindings;
@@ -47,6 +48,10 @@ internal class Program
             shader.AttachTo(Handle.Value);
 
         GL.LinkProgram(Handle.Value);
+
+        string info = GL.GetProgramInfoLog(Handle.Value);
+        if (!string.IsNullOrEmpty(info))
+            Logger.Error(info, Logger.Source.GL);
 
         foreach (var shader in shaders)
             shader.DetachFrom(Handle.Value);
