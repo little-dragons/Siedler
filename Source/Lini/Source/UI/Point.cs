@@ -10,13 +10,18 @@ public struct Point : IVertex
     public Vector2 Percent;
     public Vector2 Offset;
 
-    public static void SetVertexArrayAttributes()
+    private static readonly int Size = Marshal.SizeOf<Point>();
+    private static readonly nint PercentOffset = Marshal.OffsetOf<Point>(nameof(Percent));
+    private static readonly nint OffsetOffset = Marshal.OffsetOf<Point>(nameof(Offset));
+
+    static void IVertex.SetVertexArrayAttributes()
     {
         SharedObjects.UIProgram.Bind();
+
         GL.EnableVertexAttribArray(0);
-        GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Marshal.SizeOf<Point>(), Marshal.OffsetOf<Point>(nameof(Percent)));
+        GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Size, PercentOffset);
         
         GL.EnableVertexAttribArray(1);
-        GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Marshal.SizeOf<Point>(), Marshal.OffsetOf<Point>(nameof(Offset)));
+        GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Size, OffsetOffset);
     }
 }
