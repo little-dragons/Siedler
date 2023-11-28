@@ -149,10 +149,9 @@ public static class Sam
                 GL.Clear(ClearBufferMask.Color);
                 SharedObjects.SimpleProgram.Bind();
                 scene.Render3D(new Render3DArgs(SharedObjects.SimpleProgram, 24));
-                
+
                 SharedObjects.UIProgram.Bind();
-                Vector2 size = new(Window.Info.Resolution.Item1, Window.Info.Resolution.Item2);
-                SharedObjects.UIProgram.SetUniform("windowsize", size);
+                SharedObjects.UIProgram.SetUniform("windowsize", Window.Info.Resolution);
                 scene.RenderUI(new RenderUIArgs(SharedObjects.UIProgram, 24));
             });
 

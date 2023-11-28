@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Lini.Image;
+using Lini.Numerics;
 
 namespace Lini.Rendering.GLBindings;
 
@@ -180,6 +181,10 @@ internal static partial class GL
     internal static void Uniform(int location, Vector2 vector)
     {
         Uniform2fInstance(location, vector.X, vector.Y);
+    }
+    internal static void Uniform(int location, Vector2i vector)
+    {
+        Uniform2iInstance(location, vector.X, vector.Y);
     }
     internal static void Uniform(int location, in Vector3 vector)
     {

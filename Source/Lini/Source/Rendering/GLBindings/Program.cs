@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Lini.Image;
 using Lini.Miscellaneous;
+using Lini.Numerics;
 
 namespace Lini.Rendering.GLBindings;
 
@@ -87,6 +88,8 @@ internal class Program
     public void SetUniform(string name, int value)
         => GL.Uniform(GetLocation(name), value);
     public void SetUniform(string name, Vector2 value)
+        => GL.Uniform(GetLocation(name), value);
+    public void SetUniform(string name, Vector2i value)
         => GL.Uniform(GetLocation(name), value);
     public void SetUniform(string name, Vector3 value)
         => GL.Uniform(GetLocation(name), value);

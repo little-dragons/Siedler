@@ -44,12 +44,12 @@ internal sealed partial class Window
         if (targetInfo.IsFullscreen && targetInfo.FullscreenOptions.First != Info.FullscreenOptions.First)
         {
             var monitor = GLFW.GetPrimaryMonitor();
-            GLFW.SetWindowMonitor(Handle, monitor, (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
+            GLFW.SetWindowMonitor(Handle, monitor, new(0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
         }
         else if (!targetInfo.IsFullscreen && targetInfo.FullscreenOptions.Second != Info.FullscreenOptions.Second)
         {
             var i = targetInfo.FullscreenOptions.Second!;
-            GLFW.SetWindowMonitor(Handle, GLFW.MonitorRef.Null, i.Position ?? (0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
+            GLFW.SetWindowMonitor(Handle, GLFW.MonitorRef.Null, i.Position ?? new(0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
         }
         if (targetInfo.CursorLocked != Info.CursorLocked)
         {
@@ -114,7 +114,7 @@ internal sealed partial class Window
             return false;
 
         if (info.FullscreenOptions.Second?.Position is not null)
-            GLFW.SetWindowPos(handle, ((int, int))info.FullscreenOptions.Second.Position);
+            GLFW.SetWindowPos(handle, info.FullscreenOptions.Second.Position.Value);
 
 
 

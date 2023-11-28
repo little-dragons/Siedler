@@ -2,6 +2,7 @@ namespace Lini.Windowing;
 
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Lini.Numerics;
 
 internal static class GLFW
 {
@@ -260,8 +261,8 @@ internal static class GLFW
 
     [DllImport(LibName, EntryPoint = "glfwCreateWindow")]
     internal static extern WindowRef CreateWindow(int width, int height, [MarshalAs(UnmanagedType.LPStr)] string title, MonitorRef monitor, WindowRef share);
-    internal static WindowRef CreateWindow((int, int) dimension, string title, MonitorRef monitor, WindowRef share) {
-        return CreateWindow(dimension.Item1, dimension.Item2, title, monitor, share);
+    internal static WindowRef CreateWindow(Vector2i dimension, string title, MonitorRef monitor, WindowRef share) {
+        return CreateWindow(dimension.X, dimension.Y, title, monitor, share);
     }
 
     [DllImport(LibName, EntryPoint = "glfwWindowShouldClose")]
@@ -285,6 +286,8 @@ internal static class GLFW
     
     [DllImport(LibName, EntryPoint = "glfwSetWindowPos")]
     internal static extern void SetWindowPos(WindowRef window, int xpos, int ypos);
+    internal static void SetWindowPos(WindowRef window, Vector2i pos)
+        => SetWindowPos(window, pos.X, pos.Y);
 
     internal static void SetWindowPos(WindowRef window, (int, int) position)
         => SetWindowPos(window, position.Item1, position.Item2);
@@ -311,9 +314,9 @@ internal static class GLFW
     [DllImport(LibName, EntryPoint = "glfwSetWindowMonitor")]
     internal static extern void SetWindowMonitor(WindowRef window, MonitorRef monitor, int xpos, int ypos, int width, int height, int refreshRate);
 
-    internal static void SetWindowMonitor(WindowRef window, MonitorRef monitor, (int, int) position, (int, int) dimension, int refreshRate)
+    internal static void SetWindowMonitor(WindowRef window, MonitorRef monitor, Vector2i position, Vector2i dimension, int refreshRate)
     {
-        SetWindowMonitor(window, monitor, position.Item1, position.Item2, dimension.Item1, dimension.Item2, refreshRate);
+        SetWindowMonitor(window, monitor, position.X, position.Y, dimension.X, dimension.Y, refreshRate);
     }
 
     [DllImport(LibName, EntryPoint = "glfwSetWindowTitle")]

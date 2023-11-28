@@ -3,7 +3,7 @@
 layout (location = 0) in vec2 percent;
 layout (location = 1) in vec2 offset;
 
-uniform vec2 windowsize;
+uniform ivec2 windowsize;
 
 
 
