@@ -105,9 +105,9 @@ public sealed class Entity
     public void Remove<T>(ComponentRef<T> comp) where T : struct, IComponent
     {
         if (comp is IRenderable3D)
-            Renderables3D.RemoveAll(x => x.Item1.Full == comp.Plain.Full);
+            Renderables3D.RemoveAll(x => x.Item1 == comp.Plain);
         if (comp is IRenderableUI)
-            RenderablesUI.RemoveAll(x => x.Item1.Full == comp.Plain.Full);
+            RenderablesUI.RemoveAll(x => x.Item1 == comp.Plain);
 
         Components.Free(comp.Plain);
         Scene.Components.Delete(comp);

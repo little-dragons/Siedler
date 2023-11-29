@@ -4,14 +4,14 @@ namespace Lini.Rendering;
 
 public class Mesh<T> where T : unmanaged, IVertex
 {
-    public T[] Vertices { get; private set; }
+    private T[] Vertices { get; set; }
     public ReadOnlySpan<T> VerticesSpan => new(Vertices);
-    public uint[] Indices { get; private set; }
+    private uint[] Indices { get; set; }
     public ReadOnlySpan<uint> IndicesSpan => new(Indices);
 
-    internal Buffer<T> VertexBuffer { get; private set; } = default!;
-    internal Buffer<uint> IndexBuffer { get; private set; } = default!;
-    internal uint VertexArray { get; private set; }
+    private Buffer<T> VertexBuffer { get; set; } = default!;
+    private Buffer<uint> IndexBuffer { get; set; } = default!;
+    private uint VertexArray { get; set; }
 
 
     public Mesh(T[] vertices, uint[] indices)

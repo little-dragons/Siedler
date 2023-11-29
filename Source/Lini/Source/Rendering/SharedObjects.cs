@@ -1,4 +1,3 @@
-using System.Numerics;
 using Lini.Miscellaneous;
 using Lini.Rendering.GLBindings;
 
@@ -12,7 +11,6 @@ internal static class SharedObjects
     internal static void Initialize()
     {
         Logger.Info("Loading shared GL objects.", Logger.Source.GL);
-
 
         Shader vertexShader = new(ShaderType.Vertex, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleVertex.glsl")));
         Shader fragmentShader = new(ShaderType.Fragment, File.ReadAllText(Resources.PathFor(Resources.Type.Shader, "SimpleFragment.glsl")));
@@ -34,6 +32,7 @@ internal static class SharedObjects
     internal static void Terminate()
     {
         Logger.Info("Deleting shared GL objects.", Logger.Source.GL);
+
         if (!SimpleProgram.IsValid)
             SimpleProgram.Delete();
 

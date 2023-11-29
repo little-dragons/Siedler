@@ -45,7 +45,7 @@ public struct ComponentList
     public void Free(PlainComponentRef comp)
     {
         for (int i = 0; i < Count; i++)
-            if (Array[i].Full == comp.Full)
+            if (Array[i] == comp)
             {
                 // copy the last element to the deleted element
                 // if i is equal to that value, this has no effect and is a very
