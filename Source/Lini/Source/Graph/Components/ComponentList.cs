@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Lini.Graph.Components;
@@ -30,7 +31,7 @@ public struct ComponentList
         return true;
     }
 
-    public readonly bool TryGet<T>(out ComponentRef<T> comp) where T : struct, IComponent
+    public readonly bool TryGet<T>([NotNullWhen(true)] out ComponentRef<T>? comp) where T : struct, IComponent
     {
         foreach (var stored in Array[..Count])
         {
@@ -38,7 +39,7 @@ public struct ComponentList
                 return true;
         }
 
-        comp = default;
+        comp = null;
         return false;
     }
 
