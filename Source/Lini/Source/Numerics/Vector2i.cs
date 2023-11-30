@@ -23,6 +23,12 @@ public struct Vector2i
     public static explicit operator Vector2i(Vector2 vec)
         => new((int)vec.X, (int)vec.Y);
 
+    public static Vector2i operator+(Vector2i left, Vector2i right)
+        => new(left.X + right.X, left.Y + right.Y);
+    
+    public static Vector2i operator-(Vector2i left, Vector2i right)
+        => new(left.X - right.X, left.Y - right.Y);    
+
     public readonly void Deconstruct(out int x, out int y)
     {
         x = X;

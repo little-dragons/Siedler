@@ -1,5 +1,5 @@
 using System.Numerics;
-using Lini.Image;
+using Lini.Numerics;
 using Lini.Rendering;
 using Lini.UI;
 
@@ -16,6 +16,8 @@ public struct Button : IComponent, IRenderableUI
 
     private Mesh<Point> Mesh { get; set; }
 
+    public bool IsHovered{ get; private set; }
+
     public Button(Rectangle box)
     {
         Box = box;
@@ -29,4 +31,15 @@ public struct Button : IComponent, IRenderableUI
         args.Program.SetUniform("fillColor", BackgroundColor);
         Mesh.Draw();
     }
+
+    public void Update(UpdateArgs args)
+    {
+        Vector2 corrected = args.Input.MousePosition;
+        corrected.Y = args.CurrentWindowInfo.Resolution.Y - corrected.Y;
+        IsHovered = Box.Contains((Vector2i)corrected, args.CurrentWindowInfo.Resolution);
+        Console.WriteLine(corrected);
+        if (IsHovered) {
+            Console.WriteLine("Hovering over button");
+        }
+    }  
 }

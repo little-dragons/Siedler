@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Lini.Numerics;
 using Lini.Rendering;
 using Lini.Rendering.GLBindings;
 
@@ -21,5 +22,11 @@ public struct Point : IVertex
         
         GL.EnableVertexAttribArray(1);
         GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Size, OffsetOffset);
+    }
+
+    internal readonly Vector2i ToPixel(Vector2i windowSize)
+    {
+        var percent = (Percent + Vector2.One ) / 2 * windowSize;
+        return (Vector2i)(percent + Offset);
     }
 }
