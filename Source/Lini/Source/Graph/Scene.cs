@@ -17,9 +17,6 @@ public class Scene
         Components = new();
     }
 
-    internal Entity NewEntity()
-        => new(this);
-
 
     internal void UpdateAll(UpdateArgs args)
     {

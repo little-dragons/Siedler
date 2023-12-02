@@ -9,7 +9,7 @@ public sealed class Entity
 {
     private ComponentList Components { get; init; } = new();
 
-    public List<Entity> Children { get; init; } = [];
+    private List<Entity> Children { get; init; } = [];
     public Entity? Parent { get; private set; } = null;
 
     private Scene Scene { get; init; }
@@ -40,8 +40,10 @@ public sealed class Entity
 
     public Entity MakeChild()
     {
-        Entity e = Scene.NewEntity();
-        e.Parent = this;
+        Entity e = new(Scene)
+        {
+            Parent = this
+        };
         Children.Add(e);
         return e;
     }
@@ -151,6 +153,8 @@ public sealed class Entity
 
         foreach (var child in Children)
             child.Dispose();
+        
+        Children.Clear();
 
         foreach (var component in Components)
             Scene.Components.Delete(component);
