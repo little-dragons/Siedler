@@ -12,7 +12,7 @@ public sealed class Entity
     private List<Entity> Children { get; init; } = [];
     public Entity? Parent { get; private set; } = null;
 
-    private Scene Scene { get; init; }
+    private Layer Layer { get; init; }
     public bool EnableRendering { get; set; } = true;
 
     public Transform Transform = new();
@@ -33,14 +33,14 @@ public sealed class Entity
     }
 
 
-    internal Entity(Scene scene)
+    internal Entity(Layer layer)
     {
-        Scene = scene;
+        Layer = layer;
     }
 
     public Entity MakeChild()
     {
-        Entity e = new(Scene)
+        Entity e = new(Layer)
         {
             Parent = this
         };
@@ -70,10 +70,10 @@ public sealed class Entity
 
     public ref T TryAdd<T>(out bool success, out ComponentRef<T> compRef) where T : struct, IComponent
     {
-        ref T comp = ref Scene.Components.New(out compRef);
+        ref T comp = ref Layer.Components.New(out compRef);
         if (!Components.TryAdd(compRef.Plain))
         {
-            Scene.Components.Delete(compRef);
+            Layer.Components.Delete(compRef);
             success = false;
             return ref Unsafe.NullRef<T>();
         }
@@ -82,13 +82,13 @@ public sealed class Entity
         if (comp is IRenderable3D)
         {
             ComponentRef<T> copy = compRef;
-            void renderFun(Render3DArgs x) => ((IRenderable3D)Scene.Components.Get(copy)).Render(x);
+            void renderFun(Render3DArgs x) => ((IRenderable3D)Layer.Components.Get(copy)).Render(x);
             Renderables3D.Add((compRef.Plain, renderFun));
         }
         if (comp is IRenderableUI)
         {
             ComponentRef<T> copy = compRef;
-            void renderFun(RenderUIArgs x) => ((IRenderableUI)Scene.Components.Get(copy)).Render(x);
+            void renderFun(RenderUIArgs x) => ((IRenderableUI)Layer.Components.Get(copy)).Render(x);
             RenderablesUI.Add((compRef.Plain, renderFun));
         }
 
@@ -113,7 +113,7 @@ public sealed class Entity
             RenderablesUI.RemoveAll(x => x.Item1 == comp.Plain);
 
         Components.Free(comp.Plain);
-        Scene.Components.Delete(comp);
+        Layer.Components.Delete(comp);
     }
 
     internal void Render3D(Render3DArgs args)
@@ -157,6 +157,6 @@ public sealed class Entity
         Children.Clear();
 
         foreach (var component in Components)
-            Scene.Components.Delete(component);
+            Layer.Components.Delete(component);
     }
 }

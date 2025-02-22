@@ -6,6 +6,7 @@ using Lini.Windowing;
 using Lini.Graph.Components;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Lini.Windowing.Input;
 
 namespace Lini;
 
@@ -138,10 +139,8 @@ public static class Sam
         {
             Window.Manager.PollEvents();
 
-            UpdateArgs args = new(0.16f, Window.Input, Window.Info)
-            {
-                TargetWindowInfo = Window.Info
-            };
+
+            UpdateArgs args = new(0.16f, Window.InputState, Window.InputEvents, Window.Info);
             scene.UpdateAll(args);
 
             RenderThread.Do(() =>

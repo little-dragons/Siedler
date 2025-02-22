@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,10 +15,10 @@ namespace Lini.Windowing.Input;
 /// callbacks for this window, there may only be a single wrapper active per window, otherwise
 /// the behavior will become undefined.
 /// 
-/// Each instance provides read access to the data collected from the callbacks and a <see cref="Reset"/>
+/// Each instance provides read access to the data collected from the callbacks and a <see cref="FinishFrame"/>
 /// method which must be called in between each frame, otherwise data is not correctly aggregated.
 /// </summary>
-internal class GLFWInputWrapper : IInput
+internal class GLFWInputWrapper
 {
     /// <summary>
     /// The window for which callbacks were registered.
@@ -50,24 +51,27 @@ internal class GLFWInputWrapper : IInput
         if (GLFW.SetCursorPosCallback(Window, CursorPosCallback) != 0)
             Logger.Warn($"Cursor position callback was already set for window \'{Window.Raw}\'", Logger.Source.GLFW);
 
-
+        KeyStates = [];
         foreach (var val in Enum.GetValues<Key>())
         {
-            KeysPressed.Add(val, false);
-            KeysReleased.Add(val, false);
             KeyStates.Add(val, GLFW.GetKey(Window, (GLFW.Key)val) == GLFW.KeyState.Press);
         }
 
+        MouseButtons = [];
         foreach (var val in Enum.GetValues<MouseButton>())
         {
-            MouseButtonPressed.Add(val, false);
-            MouseButtonReleased.Add(val, false);
             MouseButtons.Add(val, GLFW.GetMouseButton(Window, (GLFW.MouseButton)val) == GLFW.KeyState.Press);
         }
 
-        Reset();
+        EventsQueue = new([]);
     }
 
+
+    public InputEvent.Queue EventsQueue { get; private set; }
+    public InputState State => new(KeyStates.ToImmutableDictionary(), MouseButtons.ToImmutableDictionary(), MousePosition);
+
+
+    private Dictionary<Key, bool> KeyStates { get; init; }
     /// <summary>
     /// This delegate exists to prevent garbage collection on it: if a raw delgate was to be passed
     /// to the glfw methods, the same delegate will be garbage collected soon after and the next
@@ -75,65 +79,34 @@ internal class GLFWInputWrapper : IInput
     /// delegate is stored here.
     /// </summary>
     private GLFW.KeyFun KeyCallback { get; set; }
-
-    private Dictionary<Key, bool> KeyStates { get; } = new();
-    public bool IsDown(Key key)
-        => KeyStates[key];
-
-    private Dictionary<Key, bool> KeysPressed { get; } = new();
-    public bool IsPressed(Key key)
-        => KeysPressed[key];
-    private Dictionary<Key, bool> KeysReleased { get; } = new();
-    public bool IsReleased(Key key)
-        => KeysReleased[key];
-
-    /// <summary>
-    /// This method handles a single key input event from glfw. It updates the state in <see cref="KeyStates"/>.
-    /// It discards some parameters as those are not intendend to be used by the engine.
-    /// </summary>
     private void KeyInput(GLFW.WindowRef window, GLFW.Key key, int scancode, GLFW.KeyState keystate, int mods)
     {
         switch (keystate)
         {
-            case GLFW.KeyState.Release:
-                KeyStates[(Key)key] = false;
-                KeysReleased[(Key)key] = true;
-                break;
             case GLFW.KeyState.Press:
-                KeyStates[(Key)key] = true;
-                KeysPressed[(Key)key] = true;
+                EventsQueue = EventsQueue.Enqueue(new KeyPressedEvent((Key)key));
+                break;
+            case GLFW.KeyState.Release:
+                EventsQueue = EventsQueue.Enqueue(new KeyReleasedEvent((Key)key));
                 break;
         }
     }
 
 
+    private Dictionary<MouseButton, bool> MouseButtons { get; init; }
     /// <summary>
     /// See the documentation of <see cref="KeyCallback"/>.
     /// </summary>
     private GLFW.MouseButtonFun MouseButtonCallback { get; set; }
-
-    private Dictionary<MouseButton, bool> MouseButtons { get; } = new();
-    public bool IsDown(MouseButton button)
-        => MouseButtons[button];
-
-    private Dictionary<MouseButton, bool> MouseButtonPressed { get; } = new();
-    public bool IsPressed(MouseButton button)
-        => MouseButtonPressed[button];
-    private Dictionary<MouseButton, bool> MouseButtonReleased { get; } = new();
-    public bool IsReleased(MouseButton button)
-        => MouseButtonReleased[button];
-
     private void MouseButtonInput(GLFW.WindowRef window, GLFW.MouseButton button, GLFW.KeyState keystate, int mods)
     {
         switch (keystate)
         {
-            case GLFW.KeyState.Release:
-                MouseButtons[(MouseButton)button] = false;
-                MouseButtonReleased[(MouseButton)button] = true;
-                break;
             case GLFW.KeyState.Press:
-                MouseButtons[(MouseButton)button] = true;
-                MouseButtonPressed[(MouseButton)button] = true;
+                EventsQueue = EventsQueue.Enqueue(new MouseButtonPressedEvent((MouseButton)button));
+                break;
+            case GLFW.KeyState.Release:
+                EventsQueue = EventsQueue.Enqueue(new MouseButtonReleasedEvent((MouseButton)button));
                 break;
         }
     }
@@ -147,33 +120,23 @@ internal class GLFWInputWrapper : IInput
     private UTF32Encoding Decoder { get; init; }
 
     /// <summary>
-    /// The text aggregated since the last call to <see cref="Reset"/>.
-    /// </summary>
-    public string Text { get; private set; } = "";
-
-    /// <summary>
     /// See the documentation of <see cref="KeyCallback"/>.
     /// </summary>
     private GLFW.CharFun CharCallback { get; set; }
     private void CharInput(GLFW.WindowRef window, uint codepoint)
     {
         Span<uint> sp = new(ref codepoint);
-        Text += Decoder.GetString(MemoryMarshal.AsBytes(sp));
+        EventsQueue = EventsQueue.Enqueue(new TextInputEvent(Decoder.GetString(MemoryMarshal.AsBytes(sp))));
     }
 
-
-
-
-    public Vector2 ScrollDelta { get; private set; }
-    public Vector2 MouseDelta { get; private set; }
     private Vector2 LastMousePosition { get; set; }
-    public Vector2 MousePosition { get; private set; }
+    private Vector2 MousePosition { get; set; }
 
     private GLFW.CursorPosFun CursorPosCallback { get; set; }
     private void CursorPosInput(GLFW.WindowRef window, double x, double y)
     {
         MousePosition = new((float)x, (float)y);
-        MouseDelta = MousePosition - LastMousePosition;
+        EventsQueue = EventsQueue.Enqueue(new MouseMoveEvent(MousePosition - LastMousePosition, MousePosition));
     }
 
 
@@ -181,23 +144,26 @@ internal class GLFWInputWrapper : IInput
     /// Resets the data which needs to be reset after handled. It is imperative that this method is called
     /// whenever the previous data is handled and the callbacks may add new data.
     /// </summary>
-    public void Reset()
+    public void FinishFrame()
     {
-        Text = "";
+        foreach (var ev in EventsQueue.Events)
+            switch (ev)
+            {
+                case MouseButtonPressedEvent mbpe:
+                    MouseButtons[mbpe.Button] = true;
+                    break;
+                case MouseButtonReleasedEvent mbre:
+                    MouseButtons[mbre.Button] = false;
+                    break;
+                case KeyPressedEvent kpe:
+                    KeyStates[kpe.Key] = true;
+                    break;
+                case KeyReleasedEvent kre:
+                    KeyStates[kre.Key] = false;
+                    break;
+            }
+
         LastMousePosition = MousePosition;
-        MouseDelta = Vector2.Zero;
-        ScrollDelta = Vector2.Zero;
-
-        foreach (var (k, _) in KeysPressed)
-        {
-            KeysPressed[k] = false;
-            KeysReleased[k] = false;
-        }
-
-        foreach (var (b, _) in MouseButtonPressed)
-        {
-            MouseButtonPressed[b] = false;
-            MouseButtonReleased[b] = false;
-        }
+        EventsQueue = new([]);
     }
 }

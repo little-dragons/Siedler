@@ -1,5 +1,5 @@
 using System.Reflection;
-using Lini.Miscellaneous;
+using Lini.Collections;
 
 namespace Lini.Graph.Components;
 

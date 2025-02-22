@@ -23,10 +23,8 @@ internal sealed partial class Window
     /// </summary>
     private GLFWInputWrapper InputHandler { get; init; }
 
-    /// <summary>
-    /// A wrapper to access the input presented since the last <see cref="FinishFrame"/>.
-    /// </summary>
-    public IInput Input => InputHandler;
+    public InputEvent.Queue InputEvents => InputHandler.EventsQueue;
+    public InputState InputState => InputHandler.State;
 
     /// <summary>
     /// The current info of the window. This property may be changed only via the <see cref="Apply(WindowInfo)"/> method.
@@ -51,13 +49,13 @@ internal sealed partial class Window
             var i = targetInfo.FullscreenOptions.Second!;
             GLFW.SetWindowMonitor(Handle, GLFW.MonitorRef.Null, i.Position ?? new(0, 0), targetInfo.Resolution, targetInfo.RefreshRate);
         }
-        if (targetInfo.CursorLocked != Info.CursorLocked)
-        {
-            if (targetInfo.CursorLocked)
-                GLFW.SetInputMode(Handle, GLFW.InputMode.Cursor, GLFW.InputValue.CursorDisabled);
-            else
-                GLFW.SetInputMode(Handle, GLFW.InputMode.Cursor, GLFW.InputValue.CursorNormal);
-        }
+        // if (targetInfo.CursorLocked != Info.CursorLocked)
+        // {
+        //     if (targetInfo.CursorLocked)
+        //         GLFW.SetInputMode(Handle, GLFW.InputMode.Cursor, GLFW.InputValue.CursorDisabled);
+        //     else
+        //         GLFW.SetInputMode(Handle, GLFW.InputMode.Cursor, GLFW.InputValue.CursorNormal);
+        // }
         if (targetInfo.Title != Info.Title)
             GLFW.SetWindowTitle(Handle, targetInfo.Title);
 
@@ -72,7 +70,7 @@ internal sealed partial class Window
     {
         WarnIfInvalid();
         RenderThread.Do(() => GLFW.SwapBuffers(Handle));
-        InputHandler.Reset();
+        InputHandler.FinishFrame();
     }
 
     /// <summary>
@@ -122,9 +120,6 @@ internal sealed partial class Window
         {
             RenderThread.Do(() => GL.Viewport(0, 0, w, h));
         });
-
-        // if (GLFW.RawMouseMotionSupported())
-        //     GLFW.SetInputMode(handle, GLFW.InputMode.RawMouseMotion, true);
 
         window = new(handle, info);
         return true;

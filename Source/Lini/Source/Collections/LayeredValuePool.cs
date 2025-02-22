@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
+using Lini.Miscellaneous;
 
-namespace Lini.Miscellaneous;
+namespace Lini.Collections;
 
 /// <summary>
 /// This pool is supposed to keep cache coherency among a large number of value-types.

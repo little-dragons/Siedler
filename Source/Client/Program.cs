@@ -16,7 +16,7 @@ Run();
 
 static void Run()
 {
-    WindowInfo info = new("Lini", new(800, 800), 60, new(new WindowedInfo(null)), false);
+    WindowInfo info = new("Lini", new(800, 800), 60, new(new WindowedInfo(null)));
 
     Sam.Initialize(info);
 
@@ -42,10 +42,14 @@ static void Run()
     };
 
     Scene scene = new();
-    Entity meshEntity = scene.Root.MakeChild();
+    Layer debugLayer = scene.GetOrCreateLayer(15);
+    debugLayer.Root.Add<EventsPrinter>();
+
+    Entity root = scene.GetOrCreateLayer(20).Root;
+    Entity meshEntity = root.MakeChild();
     meshEntity.Add<MeshRenderer>() = new(mesh, text);
 
-    Entity camEntity = scene.Root.MakeChild();
+    Entity camEntity = root.MakeChild();
     camEntity.Transform.Position.Z = 3f;
     camEntity.Transform.Position.Y = 0f;
 
@@ -64,10 +68,9 @@ static void Run()
         Entity = camEntity,
     };
 
-    scene.ActiveCamera = cameraRef;
+    scene.GetOrCreateLayer(20).ActiveCamera = cameraRef;
 
-
-    Entity buttonEntity = scene.Root.MakeChild();
+    Entity buttonEntity = root.MakeChild();
     buttonEntity.Add<Button>() = new(buttonBox) {
         BackgroundColor = new () {
             X = 1.0f,

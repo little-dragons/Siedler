@@ -1,36 +1,53 @@
 using Lini.Graph.Components;
 using Lini.Graph.Components.BuiltIn;
+using Lini.Windowing.Input;
 
 namespace Lini.Graph;
 
 public class Scene
 {
-    public ComponentRef<Camera> ActiveCamera { get; set; }
-    public Entity Root { get; init; }
+    private List<Layer> ModifiableLayers { get; init; }
+    public IReadOnlyList<Layer> Layers => ModifiableLayers.AsReadOnly();
+    public Layer GetOrCreateLayer(int index)
+    {
+        var res = ModifiableLayers.Find(x => x.Index == index);
+        if (res is not null)
+            return res;
 
-    internal ComponentsPool Components { get; init; }
+
+        Layer l = new()
+        {
+            Index = index,
+            Scene = this,
+        };
+
+        ModifiableLayers.Add(l);
+        ModifiableLayers.Sort((a, b) => a.Index.CompareTo(b.Index));
+        return l;
+    }
 
 
     public Scene()
     {
-        Root = new(this);
-        Components = new();
+        ModifiableLayers = [];
     }
 
 
     internal void UpdateAll(UpdateArgs args)
     {
-        Components.Update(args);
+        for (int i = Layers.Count - 1; i >= 0; i--)
+            Layers[i].Components.Update(args);
     }
 
     internal void Render3D(Render3DArgs args)
     {
-        args.Program.SetUniform("view", Components.Get(ActiveCamera).ViewMatrix);
-        args.Program.SetUniform("projection", Components.Get(ActiveCamera).ProjectionMatrix);
-
-        Root.Render3D(args);
+        for (int i = 0; i < Layers.Count; i++)
+            Layers[i].Render3D(args);
     }
 
     internal void RenderUI(RenderUIArgs args)
-        => Root.RenderUI(args);
+    {
+        for (int i = 0; i < Layers.Count; i++)
+            Layers[i].RenderUI(args);
+    }
 }
