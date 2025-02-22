@@ -34,7 +34,7 @@ public struct Button : IComponent, IRenderableUI
 
     public void Update(UpdateArgs args)
     {
-        Vector2 corrected = args.Input.MousePosition;
+        Vector2 corrected = args.State.MousePosition;
         corrected.Y = args.CurrentWindowInfo.Resolution.Y - corrected.Y;
         IsHovered = Box.Contains((Vector2i)corrected, args.CurrentWindowInfo.Resolution);
         Console.WriteLine(corrected);
